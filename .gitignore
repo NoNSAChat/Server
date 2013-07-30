@@ -1,4 +1,5 @@
 *.class
+db_connect.jar
 
 # Package Files #
 *.jar
