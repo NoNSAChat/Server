@@ -23,7 +23,6 @@ import RMIChatServer.Server.ChatServerInterface;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.PublicKey;
-import java.sql.SQLFeatureNotSupportedException;
 
 /**
  *
@@ -102,6 +101,11 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
 
     @Override
     public PublicKey getPublicKey(String sessionKey, int userID) throws UserNotFoundException, InternalServerErrorException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void addFriend(String sessionKey, int friendID) throws SessionDeniedException, InternalServerErrorException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
