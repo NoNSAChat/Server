@@ -4,7 +4,11 @@
  */
 package RMIChatServer.Intern.MySQL;
 
-import RMIChatServer.Exception.InternalServerErrorException;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -18,14 +22,19 @@ import java.util.logging.Logger;
  */
 public class MySQLConnection {
 
-    private String MySQLBenutzer = "chatter";
-    private String MySQLPasswort = "Pascal";
+    private String MySQLBenutzer = "";
+    private String MySQLPasswort = "";
     private String MySQLUrl = "jdbc:mysql://localhost:3306";
     private String MySQLDriver = "com.mysql.jdbc.Driver";
     private Connection MySQLConnection;
 
     public MySQLConnection() {
         try {
+            //User und Passwort einlesen
+            FileReader fr = new FileReader(new File("src/RMIChatServer/Password/Password.pwd"));
+            BufferedReader br = new BufferedReader(fr);
+            MySQLBenutzer = br.readLine();
+            MySQLPasswort = br.readLine();            
             //Mit MySQL verbinden
             Class.forName(this.MySQLDriver);
             this.MySQLConnection = DriverManager.getConnection(this.MySQLUrl, this.MySQLBenutzer, this.MySQLPasswort);
@@ -36,6 +45,10 @@ public class MySQLConnection {
         } catch (SQLException ex) {
             Logger.getLogger(MySQLConnection.class.getName()).log(Level.SEVERE, null, ex);
         } catch (ClassNotFoundException ex) {
+            Logger.getLogger(MySQLConnection.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(MySQLConnection.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
             Logger.getLogger(MySQLConnection.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
