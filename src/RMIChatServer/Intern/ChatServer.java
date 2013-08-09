@@ -34,10 +34,11 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
     private CommonFunctions function;
     private SessionHandler SessionHandler;
 
-    public ChatServer() throws RemoteException {
+    public ChatServer() throws RemoteException, Exception {
         function = new CommonFunctions();
         MySQLConnection = new MySQLConnection();
         SessionHandler = new SessionHandler();
+        //MySQLConnection.createTestUser();
     }
 
     /**

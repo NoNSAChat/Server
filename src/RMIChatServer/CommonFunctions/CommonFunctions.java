@@ -25,9 +25,10 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 
-
 /**
- * Die Klasse umfasst eine Reihe an Funktionen, die auf dem Server und dem Client gebraucht werden.
+ * Die Klasse umfasst eine Reihe an Funktionen, die auf dem Server und dem
+ * Client gebraucht werden.
+ *
  * @author Pascal
  */
 public class CommonFunctions {
@@ -52,7 +53,9 @@ public class CommonFunctions {
 
     /**
      * Die Funktion generiert aus einem Byte-Array einen PrivateKey.
-     * @param key Das Byte-Array, das zu einem PublicKey umgewandelt werden soll.
+     *
+     * @param key Das Byte-Array, das zu einem PublicKey umgewandelt werden
+     * soll.
      * @return Die Funktion gibt einen PublicKey zurück.
      * @throws InvalidKeySpecException
      * @throws NoSuchAlgorithmException
@@ -65,7 +68,9 @@ public class CommonFunctions {
 
     /**
      * Die Funktion generiert aus einem Byte-Array einen PrivateKey.
-     * @param key Das Byte-Array, das zu einem PrivateKey umgewandelt werden soll.
+     *
+     * @param key Das Byte-Array, das zu einem PrivateKey umgewandelt werden
+     * soll.
      * @return Die Funktion gibt einen PrivateKey zurück.
      * @throws InvalidKeySpecException
      * @throws NoSuchAlgorithmException
@@ -78,6 +83,7 @@ public class CommonFunctions {
 
     /**
      * Diese Funktion VERschlüsselt ein Byte-Array.
+     *
      * @param code Das ist der zu verschlüsselnde Text.
      * @param key Mit dem symmetrischen Key wird der Code verschlüsselt.
      * @return Die Funktion gibt ein byte-Array zurück.
@@ -93,6 +99,7 @@ public class CommonFunctions {
 
     /**
      * Diese Funktion ENTschlüsselt ein Byte-Array. Methode: AES
+     *
      * @param code Das ist der zu entschlüsselnde Text.
      * @param key Mit dem symmetrischen Key wird der Code entschlüsselt.
      * @return Die Funktion gibt ein byte-Array zurück.
@@ -108,6 +115,7 @@ public class CommonFunctions {
 
     /**
      * Diese Funktion VERschlüsselt ein Byte-Array. Methode: RSA
+     *
      * @param code Das ist der zu verschlüsselnde Text.
      * @param key Mit dem PublicKey wird der Code verschlüsselt.
      * @return Die Funktion gibt ein byte-Array zurück.
@@ -123,6 +131,7 @@ public class CommonFunctions {
 
     /**
      * Diese Funktion ENTschlüsselt ein Byte-Array. Methode: RSA
+     *
      * @param code Das ist der zu entschlüsselnde Text.
      * @param key Mit dem PrivateKey wird der Code entschlüsselt.
      * @return Die Funktion gibt ein byte-Array zurück.
@@ -138,6 +147,7 @@ public class CommonFunctions {
 
     /**
      * Die Funktion wandelt ein Byte-Array in einen String um.
+     *
      * @param input Ein Byte-Array, das in einen String umgewandelt werden soll.
      * @return Die Funktion gibt einen String zurück.
      * @author Pascal Lacmann
@@ -151,14 +161,15 @@ public class CommonFunctions {
         }
         return returnString;
     }
-    
+
     /**
      * Die Funktion wandelt einen String in ein Byte-Array um.
+     *
      * @param s Ein String, der zu einem Byte-Array umgewandelt werden soll.
      * @return Es wird ein Byte-Array zurück gegeben.
      * @author Pascal Lacmann
      */
-    public byte[] StringToByte(String s){
+    public byte[] StringToByte(String s) {
         byte[] returnByte = null;
         try {
             returnByte = s.getBytes("UTF-8");
@@ -167,11 +178,12 @@ public class CommonFunctions {
         }
         return returnByte;
     }
-    
+
     /**
-     * Diese Funktion generiert einen AES-Key.
-     * Die dafür genutzen Parameter sind der der Username und das Passwort.
-     * Diese Funktion generiert einen AES-Key.
+     * Diese Funktion generiert einen AES-Key. Die dafür genutzen Parameter sind
+     * der der Username und das Passwort. Diese Funktion generiert einen
+     * AES-Key.
+     *
      * @param username Benutzername des Benutzers
      * @param password Passwort des Benutzers
      * @author Pascal Lacmann
@@ -199,8 +211,34 @@ public class CommonFunctions {
             throw new InternalServerErrorException("UnsupportedEncodingException");
         }
     }
-    
-    public Boolean checkPassword(String password) throws PasswordInvalidException {
+
+    /**
+     * Überprüft ein Password auf die Einhaltung der Passwortrichtlinien.
+     *
+     * @param password Das Passwort, welches untersucht werden soll.
+     * @return True, wenn die Richtlinien eingehalten wurden, sonst false.
+     */
+    public Boolean checkPassword(String password) {
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public Boolean PasswordsCorrect(String Passwort, String salt, byte[] Hash) {
+        byte[] enteredPassword = HashPassword(Passwort, salt);
+        if (enteredPassword.equals(Hash)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Hasht einen String.
+     *
+     * @param password String, der gehasht werden soll.
+     * @param salt Salt, der an das Passwort angehängt wird.
+     * @return Es wird der Hash zurückgegeben.
+     */
+    public byte[] HashPassword(String password, String salt) {
+        return MD5.digest(StringToByte(password + salt));
     }
 }

@@ -31,6 +31,8 @@ public class RMIChatServer {
             Logger.getLogger(RMIChatServer.class.getName()).log(Level.SEVERE, null, ex);
         } catch (AlreadyBoundException ex) {
             Logger.getLogger(RMIChatServer.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Exception ex) {
+            Logger.getLogger(RMIChatServer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 }
