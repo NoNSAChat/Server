@@ -55,4 +55,8 @@ public class SessionHandler {
     public void destroyAllSessions(int userID){
         throw new UnsupportedOperationException("Not supported yet.");
     }
+    
+    public int getUserID(String sessionKey) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }
