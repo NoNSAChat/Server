@@ -11,7 +11,6 @@ import java.io.Serializable;
  * @author Pascal
  */
 public class User implements Serializable {
-    //Hallo
     private int id;
     private String username;
 
@@ -39,6 +38,5 @@ public class User implements Serializable {
     public void setUsername(String username) {
         this.username = username;
     }
-    //Hallo
     
 }
