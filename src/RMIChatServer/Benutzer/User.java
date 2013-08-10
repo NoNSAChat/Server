@@ -11,7 +11,7 @@ import java.io.Serializable;
  * @author Pascal
  */
 public class User implements Serializable {
-    
+    //Hallo
     private int id;
     private String username;
 
