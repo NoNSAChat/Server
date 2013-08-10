@@ -41,26 +41,6 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
         //MySQLConnection.createTestUser();
     }
 
-    /**
-     * Liest einen Benutzer aus der DB. Es wird keinne Session für ihn erzeugt.
-     *
-     * @param userID Benutzer ID, der ausgelesen werden soll.
-     * @return Ein MyBenutzer wird zurückgegeben, ohne einen "sessionKey".
-     * @throws UserNotFoundException Wird geworfen, wenn der gesuchte Benutzer
-     * nicht existiert.
-     * @throws InternalServerErrorException Wird geworfen, wenn ein Fehler
-     * auftritt, der nicht auftreten dürfte. Keine Fehlerbehandlung clientseitig
-     * möglich.
-     */
-    private MyUser readMyUserFromDB(int userID) throws UserNotFoundException, InternalServerErrorException {
-        if (false) {
-            throw new UserNotFoundException();
-        } else if (false) {
-            throw new InternalServerErrorException();
-        }
-        return null;
-    }
-
     @Override
     public MyUser createUser(MyUser myUser, String password) throws UserAlreadyExsistsException, PasswordInvalidException, MailAlreadyInUseException, InternalServerErrorException {
         if (false) {
@@ -119,6 +99,11 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
 
     @Override
     public void sendMessage(String sessionKey, Message message) throws SessionDeniedException, UserNotFoundException, InternalServerErrorException {
+        //checke Session auf Gültigkeit
+        //SessionHandler.checkSession(sessionKey);
+        
+        //Schreibe die Message in die Datenbank
+        MySQLConnection.createMessage(message.getMessage(), SessionHandler.getUserID(sessionKey), message.getUser());
         if (false) {
             throw new UserNotFoundException();
         } else if (false) {

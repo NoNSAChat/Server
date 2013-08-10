@@ -5,6 +5,8 @@
 package RMIChatServer.Intern.MySQL;
 
 import RMIChatServer.CommonFunctions.CommonFunctions;
+import RMIChatServer.Exception.InternalServerErrorException;
+import RMIChatServer.Exception.UserNotFoundException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -16,6 +18,7 @@ import java.security.PrivateKey;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.logging.Level;
@@ -41,7 +44,7 @@ public class MySQLConnection {
             FileReader fr = new FileReader(new File("src/RMIChatServer/Password/Password.pwd"));
             BufferedReader br = new BufferedReader(fr);
             MySQLUser = br.readLine();
-            MySQLPassword = br.readLine();            
+            MySQLPassword = br.readLine();
             //Mit MySQL verbinden
             Class.forName(this.MySQLDriver);
             this.MySQLConnection = DriverManager.getConnection(this.MySQLUrl, this.MySQLUser, this.MySQLPassword);
@@ -59,18 +62,18 @@ public class MySQLConnection {
             Logger.getLogger(MySQLConnection.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     //Test-Funktionen
-    public void createTestUser() throws Exception{
+    public void createTestUser() throws Exception {
         String sql = "INSERT INTO `chatter`.`user`(`username`, `forename`, `lastname`, `residence`, `mail`, `password`, `salt`, `publickey`, `privatekey`) "
                 + "VALUES (?,?,?,?,?,?,?,?,?);";
-        
+
         KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
         kpg.initialize(1024);
         KeyPair kp = kpg.generateKeyPair();
         byte[] pk = functions.AESEncrypt(kp.getPrivate().getEncoded(), functions.generateBenutzerAESKey("TestUser1", "111"));
-        
-        
+
+
         PreparedStatement statement = MySQLConnection.prepareStatement(sql);
         statement.setString(1, "TestUser1");
         statement.setString(2, "Forename1");
@@ -81,13 +84,13 @@ public class MySQLConnection {
         statement.setString(7, "Salt");
         statement.setBytes(8, kp.getPublic().getEncoded());
         statement.setBytes(9, pk);
-        
+
         statement.executeUpdate();
-        
+
         kp = kpg.generateKeyPair();
         pk = functions.AESEncrypt(kp.getPrivate().getEncoded(), functions.generateBenutzerAESKey("TestUser1", "111"));
-        
-        
+
+
         statement = MySQLConnection.prepareStatement(sql);
         statement.setString(1, "TestUser2");
         statement.setString(2, "Forename2");
@@ -98,9 +101,43 @@ public class MySQLConnection {
         statement.setString(7, "Salt");
         statement.setBytes(8, kp.getPublic().getEncoded());
         statement.setBytes(9, pk);
-        
+
         statement.executeUpdate();
-        
+
         statement.close();
+    }
+
+    /*
+     * Schreibt eine Message in die Datenbank.
+     */
+    public void createMessage(byte[] message, int sender, int reciever) throws InternalServerErrorException, UserNotFoundException {
+        try {
+            //Suche nach den beiden Benutzern
+            //Hole Anzahl aus DB
+            String sql = "SELECT count(*) as count FROM chatter.user WHERE user.id = ? OR user.id = ?;";
+            PreparedStatement statement = MySQLConnection.prepareStatement(sql);
+            statement.setInt(1, sender);
+            statement.setInt(2, reciever);
+            ResultSet resultSet = statement.executeQuery();
+            statement.close();
+
+            //Überprüfe die Anzahl
+            resultSet.first();
+            if (resultSet.getInt("count") < 2){
+                throw new UserNotFoundException("Benutzer konnten nicht gefunden werden");
+            }
+            
+            //Schreibe die Nachricht in die DB
+            sql = "INSERT INTO `chatter`.`message` (`sender`, `reciever`, `message`, `seen`) VALUES (?, ?, ?, ?);";
+            statement = MySQLConnection.prepareStatement(sql);
+            statement.setInt(1, sender);
+            statement.setInt(2, reciever);
+            statement.setBytes(3, message);
+            statement.setInt(4, 0);
+            statement.executeUpdate();
+            
+        } catch (SQLException ex) {
+            throw new InternalServerErrorException(ex.getMessage());
+        }
     }
 }
