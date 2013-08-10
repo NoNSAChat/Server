@@ -117,7 +117,6 @@ public class MySQLConnection {
             statement.setInt(1, sender);
             statement.setInt(2, reciever);
             ResultSet resultSet = statement.executeQuery();
-            statement.close();
 
             //Überprüfe die Anzahl
             resultSet.first();
@@ -131,8 +130,9 @@ public class MySQLConnection {
             statement.setInt(1, sender);
             statement.setInt(2, reciever);
             statement.setBytes(3, message);
-            statement.setInt(4, 0);
+            statement.setInt(4, 1);
             statement.executeUpdate();
+            statement.close();
             
         } catch (SQLException ex) {
             throw new InternalServerErrorException(ex.getMessage());

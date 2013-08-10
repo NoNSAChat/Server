@@ -4,11 +4,14 @@
  */
 package RMIChatServer.Message;
 
+import java.io.Serializable;
+
 /**
  *
  * @author Pascal
  */
-public class Message {
+public class Message implements Serializable {
+
     private int id;
     private int user;
     private byte[] message;
@@ -47,6 +50,4 @@ public class Message {
     public void setId(int id) {
         this.id = id;
     }
-    
-    
 }

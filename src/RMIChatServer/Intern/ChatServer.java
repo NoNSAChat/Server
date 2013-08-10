@@ -102,8 +102,15 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
         //checke Session auf Gültigkeit
         //SessionHandler.checkSession(sessionKey);
         
+        if (message.getUser() == SessionHandler.getUserID(sessionKey)){
+            throw new InternalServerErrorException("Ein Benutzer kann sich selber keine Nachricht senden");
+        }
+        
         //Schreibe die Message in die Datenbank
-        MySQLConnection.createMessage(message.getMessage(), SessionHandler.getUserID(sessionKey), message.getUser());
+        //MySQLConnection.createMessage(message.getMessage(), SessionHandler.getUserID(sessionKey), message.getUser());
+        //Für Tests
+        MySQLConnection.createMessage(message.getMessage(), 1, message.getUser());
+        
         if (false) {
             throw new UserNotFoundException();
         } else if (false) {
