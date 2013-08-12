@@ -145,4 +145,11 @@ public interface ChatServerInterface extends Remote {
      * @throws InternalServerErrorException Wird geworfen, wenn ein Fehler auftritt, der nicht auftreten dürfte. Keine Fehlerbehandlung clientseitig möglich.
      */
     public PublicKey getPublicKey (String sessionKey, int userID) throws SessionDeniedException, UserNotFoundException, InternalServerErrorException, RemoteException;
- }
+    
+    /**
+     * Zerstört die angegebene Session.
+     * @param sessionKey SessionKey um sich zu authentifizieren.
+     * @throws InternalServerErrorException Wird geworfen, wenn ein Fehler auftritt, der nicht auftreten dürfte. Keine Fehlerbehandlung clientseitig möglich.
+     */
+    public void logOff (String sessionKey) throws InternalServerErrorException;
+}
