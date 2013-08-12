@@ -151,5 +151,5 @@ public interface ChatServerInterface extends Remote {
      * @param sessionKey SessionKey um sich zu authentifizieren.
      * @throws InternalServerErrorException Wird geworfen, wenn ein Fehler auftritt, der nicht auftreten dürfte. Keine Fehlerbehandlung clientseitig möglich.
      */
-    public void logOff (String sessionKey) throws InternalServerErrorException;
+    public void logOff (String sessionKey) throws InternalServerErrorException, RemoteException;
 }
