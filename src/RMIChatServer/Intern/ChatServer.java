@@ -94,7 +94,8 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
         } else if (false) {
             throw new WrongPasswordException();
         }
-        return null;
+        throw new WrongPasswordException("Du bist blöd");
+        //return null;
     }
 
     @Override
