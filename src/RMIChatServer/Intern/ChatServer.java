@@ -175,6 +175,8 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
 
     @Override
     public Message[] getLastMessages(String sessionKey, int user, int count, int id) throws SessionDeniedException, NoConversationFoundException, InternalServerErrorException {
+        
+        
         if (false) {
             throw new NoConversationFoundException();
         } else if (false) {
