@@ -75,21 +75,20 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             ResultSet res = countusername.executeQuery();
             res.first();
             int count = res.getInt(1);
-        if (count > 0) {
-            throw new UserAlreadyExsistsException();
-        }
-        sql = "SELECT COUNT(*) FROM chatter.user WHERE username = ?;";
-        if (false) {
-            throw new MailAlreadyInUseException();
-        }
-        else if (false) {
-            throw new PasswordInvalidException();
-        }
+            if (count > 0) {
+                throw new UserAlreadyExsistsException();
+            }
+            sql = "SELECT COUNT(*) FROM chatter.user WHERE username = ?;";
+            if (false) {
+                throw new MailAlreadyInUseException();
+            } else if (false) {
+                throw new PasswordInvalidException();
+            }
         } catch (SQLException ex) {
             Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
             //throw new InternalServerErrorException();
         }
-        
+
         System.out.println("MyUser erstellen");
         return new MyUser(null, null, null, null, null, null);
     }
@@ -228,12 +227,11 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
                 statement.setInt(5, count);
                 rs = statement.executeQuery();
             }
-            statement.close();
 
             //Anzahl der Ergebnisse
             int countResults = 0;
             if (rs.first()) {
-                countResults ++;
+                countResults++;
                 while (rs.next()) {
                     countResults++;
                 }
@@ -246,7 +244,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
                 messages[i] = new Message(rs.getInt("id"), rs.getInt("reciever"), rs.getBytes("message"));
                 rs.next();
             }
-
+            statement.close();
         } catch (SQLException ex) {
             throw new InternalServerErrorException(ex.getMessage());
         }
@@ -283,12 +281,11 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             statement.setInt(6, count);
 
             ResultSet rs = statement.executeQuery();
-            statement.close();
 
             //Anzahl der Ergebnisse
             int countResults = 0;
             if (rs.first()) {
-                countResults ++;
+                countResults++;
                 while (rs.next()) {
                     countResults++;
                 }
@@ -301,9 +298,9 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
                 messages[i] = new Message(rs.getInt("id"), rs.getInt("reciever"), rs.getBytes("message"));
                 rs.next();
             }
-
+            statement.close();
         } catch (SQLException ex) {
-            Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
+            throw new InternalServerErrorException(ex.getMessage());
         }
         if (false) {
             throw new NoConversationFoundException();
