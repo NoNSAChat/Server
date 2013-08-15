@@ -103,7 +103,7 @@ public interface ChatServerInterface extends Remote {
     public void sendMessage(String sessionKey, Message message) throws SessionDeniedException, UserNotFoundException, InternalServerErrorException, RemoteException;
     
     /**
-     * Gibt alle gesendete und empfangene Nachrichten einer Konversation zurück.
+     * Gibt alle gesendete und empfangene Nachrichten einer Konversation seit der angegebenen ID zurück.
      * Die erste Nachricht im Array hat die höchste und somit neuste ID.
      * Es werden je nach count definiert Nachrichten zurück gegeben.
      * @param sessionKey SessionKey um sich zu authentifizieren.
@@ -118,16 +118,18 @@ public interface ChatServerInterface extends Remote {
     public Message[] getLastMessages(String sessionKey, int user, int count, int id) throws SessionDeniedException, NoConversationFoundException, InternalServerErrorException, RemoteException;
     
     /**
-     * Gibt alle Nachrichten zurück, die empfangen oder gesendet wurden seit der angegeben ID.
+     * Gibt alle Nachrichten zurück, die empfangen oder gesendet wurden bis zu der angegeben ID.
+     * Die erste Nachricht in dem Array hat die höchste id.
      * @param sessionKey SessionKey um sich zu authentifizieren.
      * @param user Benutzer ID, dessen Konversation geladen werden soll.
      * @param lastID Nachrichten dürfen keine KLEINERE ID besitzen
+     * @param count Anzahl der Nachrichten
      * @return Gibt ein Array an Messages zurück. Hierbei ist bei der Message das Attribut "user" entweder die eigene ID oder die ID des Konversationspartners.
      * @throws SessionDeniedException Wird geworfen, wenn die genannte Session nicht gültig ist.
      * @throws NoConversationFoundException Wird geworfen, wenn keine Konversation mit einem Benutzer gefunden wurde (dürfte eigentlich nicht auftreten).
      * @throws InternalServerErrorException Wird geworfen, wenn ein Fehler auftritt, der nicht auftreten dürfte. Keine Fehlerbehandlung clientseitig möglich.
      */
-    public Message[] getMessagesSinceID (String sessionKey, int user, int lastID) throws SessionDeniedException, NoConversationFoundException, InternalServerErrorException, RemoteException;
+    public Message[] getMessagesSinceID (String sessionKey, int user, int lastID, int count) throws SessionDeniedException, NoConversationFoundException, InternalServerErrorException, RemoteException;
     
     /**
      * Gibt alle Freunde eines Benutzer zurück.

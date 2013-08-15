@@ -75,15 +75,14 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             ResultSet res = countusername.executeQuery();
             int count = res.getInt(1);
 
-        if (count > 0) {
-            throw new UserAlreadyExsistsException();
-        } else if (false) {
-            throw new PasswordInvalidException();
-        } else if (false) {
-            throw new MailAlreadyInUseException();
-        }
-        }
-        catch (SQLException ex) {
+            if (count > 0) {
+                throw new UserAlreadyExsistsException();
+            } else if (false) {
+                throw new PasswordInvalidException();
+            } else if (false) {
+                throw new MailAlreadyInUseException();
+            }
+        } catch (SQLException ex) {
             throw new InternalServerErrorException();
         }
         return null;
@@ -223,10 +222,12 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
                 statement.setInt(5, count);
                 rs = statement.executeQuery();
             }
+            statement.close();
 
             //Anzahl der Ergebnisse
             int countResults = 0;
             if (rs.first()) {
+                countResults ++;
                 while (rs.next()) {
                     countResults++;
                 }
@@ -235,7 +236,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             //Lade das Ergebnis in ein Message Array
             messages = new Message[countResults];
             rs.first();
-            for (int i = 0; i < messages.length; i++){
+            for (int i = 0; i < messages.length; i++) {
                 messages[i] = new Message(rs.getInt("id"), rs.getInt("reciever"), rs.getBytes("message"));
                 rs.next();
             }
@@ -254,7 +255,50 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
     }
 
     @Override
-    public Message[] getMessagesSinceID(String sessionKey, int user, int lastID) throws SessionDeniedException, NoConversationFoundException, InternalServerErrorException {
+    public Message[] getMessagesSinceID(String sessionKey, int user, int lastID, int count) throws SessionDeniedException, NoConversationFoundException, InternalServerErrorException {
+        //checke Session auf Gültigkeit
+        //SessionHandler.checkSession(sessionKey);
+
+        Message[] messages = null;
+        try {
+            //Für Tests
+            int sender = 1;
+            //int sender = SessionHandler.getUserID(sessionKey);
+            int reciever = user;
+
+            //Lade Nachrichten aus DB
+            String sql = "SELECT * FROM chatter.message WHERE ((sender = ? AND reciever = ?) OR (sender = ? AND reciever = ?)) AND id < ? ORDER BY id DESC LIMIT ?;";
+            PreparedStatement statement = MySQLConnection.prepareStatement(sql);
+            statement.setInt(1, sender);
+            statement.setInt(2, reciever);
+            statement.setInt(3, reciever);
+            statement.setInt(4, sender);
+            statement.setInt(5, lastID);
+            statement.setInt(6, count);
+
+            ResultSet rs = statement.executeQuery();
+            statement.close();
+
+            //Anzahl der Ergebnisse
+            int countResults = 0;
+            if (rs.first()) {
+                countResults ++;
+                while (rs.next()) {
+                    countResults++;
+                }
+            }
+
+            //Lade das Ergebnis in ein Message Array
+            messages = new Message[countResults];
+            rs.first();
+            for (int i = 0; i < messages.length; i++) {
+                messages[i] = new Message(rs.getInt("id"), rs.getInt("reciever"), rs.getBytes("message"));
+                rs.next();
+            }
+
+        } catch (SQLException ex) {
+            Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
         if (false) {
             throw new NoConversationFoundException();
         } else if (false) {
@@ -262,7 +306,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
         } else if (false) {
             throw new SessionDeniedException();
         }
-        return null;
+        return messages;
     }
 
     @Override
