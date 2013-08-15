@@ -191,7 +191,9 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
         //SessionHandler.checkSession(sessionKey);
 
         Message[] messages = null;
-        int sender = SessionHandler.getUserID(sessionKey);
+        //int sender = SessionHandler.getUserID(sessionKey);
+        //Für Tests
+        int sender = 1;
         int reciever = user;
         String sql = "";
         PreparedStatement statement = null;
