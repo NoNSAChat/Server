@@ -201,7 +201,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             //Hole Nachrichten aus DB
             if (id != 0) {
                 //Mit id Berücksichtigung
-                sql = "SELECT * FROM chatter.message WHERE ((sender = ? AND reciever = ?) OR (sender = ? AND reciever = ?)) AND id >= ? ORDER BY id DESC LIMIT ?;";
+                sql = "SELECT * FROM chatter.message WHERE ((sender = ? AND reciever = ?) OR (sender = ? AND reciever = ?)) AND id > ? ORDER BY id DESC LIMIT ?;";
                 statement = MySQLConnection.prepareStatement(sql);
                 statement.setInt(1, sender);
                 statement.setInt(2, reciever);
