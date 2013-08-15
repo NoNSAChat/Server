@@ -18,11 +18,19 @@ import RMIChatServer.Exception.UserNotFoundException;
 import RMIChatServer.Exception.WrongPasswordException;
 import RMIChatServer.Intern.Session.SessionHandler;
 import RMIChatServer.Message.Message;
-import RMIChatServer.Intern.MySQL.MySQLConnection;
 import RMIChatServer.Server.ChatServerInterface;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.PublicKey;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 /**
  *
@@ -30,15 +38,30 @@ import java.security.PublicKey;
  */
 public class ChatServer extends UnicastRemoteObject implements ChatServerInterface {
 
-    private MySQLConnection MySQLConnection;
     private CommonFunctions function;
     private SessionHandler SessionHandler;
+    private String MySQLUser = "";
+    private String MySQLPassword = "";
+    private String MySQLUrl = "jdbc:mysql://localhost:3306";
+    private String MySQLDriver = "com.mysql.jdbc.Driver";
+    private Connection MySQLConnection;
 
     public ChatServer() throws RemoteException, Exception {
+        //User und Passwort einlesen
+        FileReader fr = new FileReader(new File("src/RMIChatServer/Password/Password.pwd"));
+        BufferedReader br = new BufferedReader(fr);
+        MySQLUser = br.readLine();
+        MySQLPassword = br.readLine();
+        //Mit MySQL verbinden
+        Class.forName(this.MySQLDriver);
+        this.MySQLConnection = DriverManager.getConnection(this.MySQLUrl, this.MySQLUser, this.MySQLPassword);
+        //DB auswählen
+        Statement selectDB = MySQLConnection.createStatement();
+        selectDB.execute("USE chatter");
+        selectDB.close();
+        System.out.println("Mit MySQL verbunden");
         function = new CommonFunctions();
-        MySQLConnection = new MySQLConnection();
         SessionHandler = new SessionHandler();
-        //MySQLConnection.createTestUser();
     }
 
     @Override
@@ -103,15 +126,44 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
         //checke Session auf Gültigkeit
         //SessionHandler.checkSession(sessionKey);
         
-        if (message.getUser() == SessionHandler.getUserID(sessionKey)){
+        //int sender = SessionHandler.getUserID(sessionKey);
+        //Für Tests
+        int sender = 1;
+        int reciever = message.getUser();
+
+        if (message.getUser() == sender) {
             throw new InternalServerErrorException("Ein Benutzer kann sich selber keine Nachricht senden");
         }
-        
+
         //Schreibe die Message in die Datenbank
-        //MySQLConnection.createMessage(message.getMessage(), SessionHandler.getUserID(sessionKey), message.getUser());
-        //Für Tests
-        MySQLConnection.createMessage(message.getMessage(), 1, message.getUser());
-        
+        //Suche nach den beiden Benutzern
+        //Hole Anzahl aus DB
+        try {
+            String sql = "SELECT count(*) as count FROM chatter.user WHERE user.id = ? OR user.id = ?;";
+            PreparedStatement statement = MySQLConnection.prepareStatement(sql);
+            statement.setInt(1, sender);
+            statement.setInt(2, reciever);
+            ResultSet resultSet = statement.executeQuery();
+
+            //Überprüfe die Anzahl
+            resultSet.first();
+            if (resultSet.getInt("count") < 2) {
+                throw new UserNotFoundException("Benutzer konnten nicht gefunden werden");
+            }
+
+            //Schreibe die Nachricht in die DB
+            sql = "INSERT INTO `chatter`.`message` (`sender`, `reciever`, `message`, `seen`) VALUES (?, ?, ?, ?);";
+            statement = MySQLConnection.prepareStatement(sql);
+            statement.setInt(1, sender);
+            statement.setInt(2, reciever);
+            statement.setBytes(3, message.getMessage());
+            statement.setInt(4, 0);
+            statement.executeUpdate();
+            statement.close();
+        } catch (SQLException ex) {
+            throw new InternalServerErrorException("SQLException");
+        }
+
         if (false) {
             throw new UserNotFoundException();
         } else if (false) {
@@ -176,7 +228,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
 
     @Override
     public void logOff(String sessionKey) throws InternalServerErrorException {
-        if (false){
+        if (false) {
             throw new InternalServerErrorException();
         }
     }
