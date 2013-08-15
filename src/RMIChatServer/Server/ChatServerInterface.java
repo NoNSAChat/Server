@@ -104,6 +104,7 @@ public interface ChatServerInterface extends Remote {
     
     /**
      * Gibt alle gesendete und empfangene Nachrichten einer Konversation zurück.
+     * Die erste Nachricht im Array hat die höchste und somit neuste ID.
      * Es werden je nach count definiert Nachrichten zurück gegeben.
      * @param sessionKey SessionKey um sich zu authentifizieren.
      * @param user Benutzer ID, dessen Konversation geladen werden soll.
