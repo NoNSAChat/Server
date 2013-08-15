@@ -31,6 +31,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -125,7 +127,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
     public void sendMessage(String sessionKey, Message message) throws SessionDeniedException, UserNotFoundException, InternalServerErrorException {
         //checke Session auf Gültigkeit
         //SessionHandler.checkSession(sessionKey);
-        
+
         //int sender = SessionHandler.getUserID(sessionKey);
         //Für Tests
         int sender = 1;
@@ -175,8 +177,61 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
 
     @Override
     public Message[] getLastMessages(String sessionKey, int user, int count, int id) throws SessionDeniedException, NoConversationFoundException, InternalServerErrorException {
-        
-        
+
+        //checke Session auf Gültigkeit
+        //SessionHandler.checkSession(sessionKey);
+
+        Message[] messages = null;
+        int sender = SessionHandler.getUserID(sessionKey);
+        int reciever = user;
+        String sql = "";
+        PreparedStatement statement = null;
+        ResultSet rs = null;
+
+        try {
+            //Hole Nachrichten aus DB
+            if (id != 0) {
+                //Mit id Berücksichtigung
+                sql = "SELECT * FROM chatter.message WHERE ((sender = ? AND reciever = ?) OR (sender = ? AND reciever = ?)) AND id >= ? ORDER BY id DESC LIMIT ?;";
+                statement = MySQLConnection.prepareStatement(sql);
+                statement.setInt(1, sender);
+                statement.setInt(2, reciever);
+                statement.setInt(3, reciever);
+                statement.setInt(4, sender);
+                statement.setInt(5, id);
+                statement.setInt(6, count);
+                rs = statement.executeQuery();
+            } else {
+                //Lade die letzten Nachrichten
+                sql = "SELECT * FROM chatter.message WHERE ((sender = ? AND reciever = ?) OR (sender = ? AND reciever = ?)) ORDER BY id DESC LIMIT ?;";
+                statement = MySQLConnection.prepareStatement(sql);
+                statement.setInt(1, sender);
+                statement.setInt(2, reciever);
+                statement.setInt(3, reciever);
+                statement.setInt(4, sender);
+                statement.setInt(5, count);
+                rs = statement.executeQuery();
+            }
+
+            //Anzahl der Ergebnisse
+            int countResults = 0;
+            if (rs.first()) {
+                while (rs.next()) {
+                    countResults++;
+                }
+            }
+
+            //Lade das Ergebnis in ein Message Array
+            messages = new Message[countResults];
+            rs.first();
+            for (int i = 0; i < messages.length; i++){
+                messages[i] = new Message(rs.getInt("id"), rs.getInt("reciever"), rs.getBytes("message"));
+                rs.next();
+            }
+
+        } catch (SQLException ex) {
+            throw new InternalServerErrorException(ex.getMessage());
+        }
         if (false) {
             throw new NoConversationFoundException();
         } else if (false) {
@@ -184,7 +239,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
         } else if (false) {
             throw new SessionDeniedException();
         }
-        return null;
+        return messages;
     }
 
     @Override
