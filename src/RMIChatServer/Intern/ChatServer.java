@@ -68,24 +68,30 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
 
     @Override
     public MyUser createUser(MyUser myUser, String password) throws UserAlreadyExsistsException, PasswordInvalidException, MailAlreadyInUseException, InternalServerErrorException {
-        String sql = "SELECT COUNT(*) FROM 'chatter'.'user' WHERE 'username' = ? and 'mail' = ?";
+        String sql = "SELECT COUNT(*) FROM chatter.user WHERE username = ?;";
         try {
             PreparedStatement countusername = MySQLConnection.prepareStatement(sql);
             countusername.setString(1, myUser.getUsername());
             ResultSet res = countusername.executeQuery();
+            res.first();
             int count = res.getInt(1);
-
-            if (count > 0) {
-                throw new UserAlreadyExsistsException();
-            } else if (false) {
-                throw new PasswordInvalidException();
-            } else if (false) {
-                throw new MailAlreadyInUseException();
-            }
-        } catch (SQLException ex) {
-            throw new InternalServerErrorException();
+        if (count > 0) {
+            throw new UserAlreadyExsistsException();
         }
-        return null;
+        sql = "SELECT COUNT(*) FROM chatter.user WHERE username = ?;";
+        if (false) {
+            throw new MailAlreadyInUseException();
+        }
+        else if (false) {
+            throw new PasswordInvalidException();
+        }
+        } catch (SQLException ex) {
+            Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
+            //throw new InternalServerErrorException();
+        }
+        
+        System.out.println("MyUser erstellen");
+        return new MyUser(null, null, null, null, null, null);
     }
 
     @Override
