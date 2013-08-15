@@ -31,6 +31,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -66,14 +68,23 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
 
     @Override
     public MyUser createUser(MyUser myUser, String password) throws UserAlreadyExsistsException, PasswordInvalidException, MailAlreadyInUseException, InternalServerErrorException {
-        if (false) {
+        String sql = "SELECT COUNT(*) FROM 'chatter'.'user' WHERE 'username' = ? and 'mail' = ?";
+        try {
+            PreparedStatement countusername = MySQLConnection.prepareStatement(sql);
+            countusername.setString(1, myUser.getUsername());
+            ResultSet res = countusername.executeQuery();
+            int count = res.getInt(1);
+
+        if (count > 0) {
             throw new UserAlreadyExsistsException();
-        } else if (false) {
-            throw new InternalServerErrorException();
         } else if (false) {
             throw new PasswordInvalidException();
         } else if (false) {
             throw new MailAlreadyInUseException();
+        }
+        }
+        catch (SQLException ex) {
+            throw new InternalServerErrorException();
         }
         return null;
     }
