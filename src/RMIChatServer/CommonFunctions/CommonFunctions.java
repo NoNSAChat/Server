@@ -126,7 +126,7 @@ public class CommonFunctions {
      */
     public byte[] RSAEncrypt(byte[] code, PublicKey key) throws InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
         RSACipher.init(Cipher.ENCRYPT_MODE, key);
-        return AESCipher.doFinal(code);
+        return RSACipher.doFinal(code);
     }
 
     /**
@@ -142,7 +142,7 @@ public class CommonFunctions {
      */
     public byte[] RSADecrypt(byte[] code, PrivateKey key) throws InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
         RSACipher.init(Cipher.DECRYPT_MODE, key);
-        return AESCipher.doFinal(code);
+        return RSACipher.doFinal(code);
     }
 
     /**

@@ -349,14 +349,15 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             sql = "SELECT count(*) as count FROM chatter.user WHERE id = ? OR id = ?;";
             statement = MySQLConnection.prepareStatement(sql);
             statement.setInt(1, user);
-            statement.setInt(1, friend);
+            statement.setInt(2, friend);
             rs = statement.executeQuery();
+            rs.first();
             if (rs.getInt("count") != 2) {
                 throw new UserNotFoundException("Benutzer konnten nicht gefunden weden!");
             }
 
             //Überprüfe, ob Freunde schon vorhanden.
-            sql = "SELECT count(*) as count FROM chatter.friend WHERE (user = 1 AND friend = 2) OR (user = 2 AND friend = 1);";
+            sql = "SELECT count(*) as count FROM chatter.friend WHERE (user = ? AND friend = ?) OR (user = ? AND friend = ?);";
             statement = MySQLConnection.prepareStatement(sql);
             statement.setInt(1, user);
             statement.setInt(2, friend);
@@ -380,6 +381,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             statement = MySQLConnection.prepareStatement(sql);
             statement.setInt(1, user);
             rs = statement.executeQuery();
+            rs.first();
             byte[] encryptedUserKey = function.RSAEncrypt(keyBytes, function.byteToPublicKey(rs.getBytes("publicKey")));
             
             //Verschlüssle für friend
@@ -387,6 +389,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             statement = MySQLConnection.prepareStatement(sql);
             statement.setInt(1, friend);
             rs = statement.executeQuery();
+            rs.first();
             byte[] encryptedFriendKey = function.RSAEncrypt(keyBytes, function.byteToPublicKey(rs.getBytes("publicKey")));
             
             //lege Datensätze an für user
@@ -406,17 +409,18 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             statement.executeUpdate();
             
         } catch (SQLException ex) {
-            throw new InternalServerErrorException(ex.getMessage());
+            ex.printStackTrace();
+            throw new InternalServerErrorException("SQLException: " + ex.getMessage());
         } catch (NoSuchAlgorithmException ex) {
-            throw new InternalServerErrorException(ex.getMessage());
+            throw new InternalServerErrorException("NoSuchAlgorithmException: " + ex.getMessage());
         } catch (InvalidKeySpecException ex) {
-            throw new InternalServerErrorException(ex.getMessage());
+            throw new InternalServerErrorException("InvalidKeySpecException: " + ex.getMessage());
         } catch (InvalidKeyException ex) {
-            throw new InternalServerErrorException(ex.getMessage());
+            throw new InternalServerErrorException("InvalidKeyException: " + ex.getMessage());
         } catch (IllegalBlockSizeException ex) {
-            throw new InternalServerErrorException(ex.getMessage());
+            throw new InternalServerErrorException("IllegalBlockSizeException: " + ex.getMessage());
         } catch (BadPaddingException ex) {
-            throw new InternalServerErrorException(ex.getMessage());
+            throw new InternalServerErrorException("BadPaddingException: " + ex.getMessage());
         }
         if (false) {
             throw new InternalServerErrorException();
