@@ -14,6 +14,7 @@ import RMIChatServer.Exception.NoConversationFoundException;
 import RMIChatServer.Exception.PasswordInvalidException;
 import RMIChatServer.Exception.SessionDeniedException;
 import RMIChatServer.Exception.UserAlreadyExsistsException;
+import RMIChatServer.Exception.UserAreAlreadyFriendsException;
 import RMIChatServer.Exception.UserNotFoundException;
 import RMIChatServer.Exception.WrongPasswordException;
 import RMIChatServer.Intern.Session.SessionHandler;
@@ -24,7 +25,11 @@ import java.io.File;
 import java.io.FileReader;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.security.InvalidKeyException;
+import java.security.Key;
+import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -33,6 +38,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.KeyGenerator;
 
 /**
  *
@@ -325,10 +333,10 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
     }
 
     @Override
-    public void addFriend(String sessionKey, int friendID) throws UserNotFoundException, SessionDeniedException, InternalServerErrorException {
+    public void addFriend(String sessionKey, int friendID) throws UserAreAlreadyFriendsException, UserNotFoundException, SessionDeniedException, InternalServerErrorException {
         //Checke Session auf Gültigkeit!
         //SessionHandler.checkSession(sessionKey);
-        
+
         String sql;
         PreparedStatement statement;
         ResultSet rs;
@@ -343,10 +351,10 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             statement.setInt(1, user);
             statement.setInt(1, friend);
             rs = statement.executeQuery();
-            if(rs.getInt("count") != 2){
+            if (rs.getInt("count") != 2) {
                 throw new UserNotFoundException("Benutzer konnten nicht gefunden weden!");
             }
-            
+
             //Überprüfe, ob Freunde schon vorhanden.
             sql = "SELECT count(*) as count FROM chatter.friend WHERE (user = 1 AND friend = 2) OR (user = 2 AND friend = 1);";
             statement = MySQLConnection.prepareStatement(sql);
@@ -356,19 +364,64 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             statement.setInt(4, user);
             rs = statement.executeQuery();
             rs.first();
-            if (rs.getInt("count") > 0){
-                throw new InternalServerErrorException("Die Benutzer sind schon Freunde!");
+            if (rs.getInt("count") > 0) {
+                throw new UserAreAlreadyFriendsException("Die Benutzer sind schon Freunde!");
             }
+
+            //Lege Freunde an.
+            //Lege Key an.
+            KeyGenerator kgen = KeyGenerator.getInstance("AES");
+            kgen.init(128);
+            Key key = kgen.generateKey();
+            byte[] keyBytes = key.getEncoded();
             
-            sql = "INSERT INTO `chatter`.`friend` (`id`, `user`, `friend`, `key`) VALUES (? ,?, ?, ?);";
+            //verschlüssele für user
+            sql = "SELECT publicKey FROM chatter.user WHERE id = ?;";
             statement = MySQLConnection.prepareStatement(sql);
-            if (false) {
-                throw new InternalServerErrorException();
-            } else if (false) {
-                throw new SessionDeniedException();
-            }
+            statement.setInt(1, user);
+            rs = statement.executeQuery();
+            byte[] encryptedUserKey = function.RSAEncrypt(keyBytes, function.byteToPublicKey(rs.getBytes("publicKey")));
+            
+            //Verschlüssle für friend
+            sql = "SELECT publicKey FROM chatter.user WHERE id = ?;";
+            statement = MySQLConnection.prepareStatement(sql);
+            statement.setInt(1, friend);
+            rs = statement.executeQuery();
+            byte[] encryptedFriendKey = function.RSAEncrypt(keyBytes, function.byteToPublicKey(rs.getBytes("publicKey")));
+            
+            //lege Datensätze an für user
+            sql = "INSERT INTO `chatter`.`friend` (`user`, `friend`, `key`) VALUES (?, ?, ?);";
+            statement = MySQLConnection.prepareStatement(sql);
+            statement.setInt(1, user);
+            statement.setInt(2, friend);
+            statement.setBytes(3, encryptedUserKey);
+            statement.executeUpdate();
+            
+            //lege Datensätze an für user
+            sql = "INSERT INTO `chatter`.`friend` (`user`, `friend`, `key`) VALUES (?, ?, ?);";
+            statement = MySQLConnection.prepareStatement(sql);
+            statement.setInt(1, friend);
+            statement.setInt(2, user);
+            statement.setBytes(3, encryptedFriendKey);
+            statement.executeUpdate();
+            
         } catch (SQLException ex) {
-            Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
+            throw new InternalServerErrorException(ex.getMessage());
+        } catch (NoSuchAlgorithmException ex) {
+            throw new InternalServerErrorException(ex.getMessage());
+        } catch (InvalidKeySpecException ex) {
+            throw new InternalServerErrorException(ex.getMessage());
+        } catch (InvalidKeyException ex) {
+            throw new InternalServerErrorException(ex.getMessage());
+        } catch (IllegalBlockSizeException ex) {
+            throw new InternalServerErrorException(ex.getMessage());
+        } catch (BadPaddingException ex) {
+            throw new InternalServerErrorException(ex.getMessage());
+        }
+        if (false) {
+            throw new InternalServerErrorException();
+        } else if (false) {
+            throw new SessionDeniedException();
         }
     }
 

@@ -13,6 +13,7 @@ import RMIChatServer.Exception.NoConversationFoundException;
 import RMIChatServer.Exception.PasswordInvalidException;
 import RMIChatServer.Exception.SessionDeniedException;
 import RMIChatServer.Exception.UserAlreadyExsistsException;
+import RMIChatServer.Exception.UserAreAlreadyFriendsException;
 import RMIChatServer.Exception.UserNotFoundException;
 import RMIChatServer.Exception.WrongPasswordException;
 import RMIChatServer.Message.Message;
@@ -76,11 +77,12 @@ public interface ChatServerInterface extends Remote {
      * Erzeugt eine Freundschaft und legt die dazu passenden Keys an.
      * @param sessionKey SessionKey um sich zu authentifizieren.
      * @param friendID ID des Freundes-Benutzers.
+     * @throws UserAreAlreadyFriendsException Wird geworfen, wenn die Benutzer schon Freunde sind.
      * @throws UserNotFoundException Wird geworfen, wenn ein Benutzer nicht gefunden werden kann.
      * @throws SessionDeniedException Wird geworfen, wenn die genannte Session nicht gültig ist.
      * @throws InternalServerErrorException Wird geworfen, wenn ein Fehler auftritt, der nicht auftreten dürfte. Keine Fehlerbehandlung clientseitig möglich.
      */
-    public void addFriend (String sessionKey, int friendID) throws UserNotFoundException, SessionDeniedException, InternalServerErrorException, RemoteException;
+    public void addFriend (String sessionKey, int friendID) throws UserAreAlreadyFriendsException, UserNotFoundException, SessionDeniedException, InternalServerErrorException, RemoteException;
     
     
     /**
