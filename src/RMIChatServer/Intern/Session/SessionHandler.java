@@ -63,6 +63,13 @@ public class SessionHandler {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    /**
+     * Gibt die ID des Benutzers der Session zurück.
+     *
+     * @param sessionKey SessionKey des Benutzers
+     * @return ID des Benutzers
+     * @throws SessionDeniedException
+     */
     public int getUserID(String sessionKey) throws SessionDeniedException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
