@@ -390,18 +390,9 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             statement.executeUpdate();
 
         } catch (SQLException ex) {
-            ex.printStackTrace();
             throw new InternalServerErrorException("SQLException: " + ex.getMessage());
         } catch (NoSuchAlgorithmException ex) {
             throw new InternalServerErrorException("NoSuchAlgorithmException: " + ex.getMessage());
-        } catch (InvalidKeySpecException ex) {
-            throw new InternalServerErrorException("InvalidKeySpecException: " + ex.getMessage());
-        } catch (InvalidKeyException ex) {
-            throw new InternalServerErrorException("InvalidKeyException: " + ex.getMessage());
-        } catch (IllegalBlockSizeException ex) {
-            throw new InternalServerErrorException("IllegalBlockSizeException: " + ex.getMessage());
-        } catch (BadPaddingException ex) {
-            throw new InternalServerErrorException("BadPaddingException: " + ex.getMessage());
         }
         if (false) {
             throw new InternalServerErrorException();
@@ -424,7 +415,10 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
         PreparedStatement statement;
         ResultSet rs;
 
-        byte[] key;
+        byte[] key = null;
+
+        //Überprüfe, ob Unterhaltung vorhanden ist
+        checkConversationExsists(user, friend);
 
         try {
             sql = "SELECT f.key FROM chatter.friend f WHERE user = ? AND friend = ?;";
@@ -443,8 +437,6 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             throw new SessionDeniedException();
         } else if (false) {
             throw new NoConversationFoundException();
-        } else if (false) {
-            throw new InternalServerErrorException();
         }
         return key;
     }
