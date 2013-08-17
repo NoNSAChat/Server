@@ -73,4 +73,13 @@ public class SessionHandler {
     public int getUserID(String sessionKey) throws SessionDeniedException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+    
+    /**
+     * Untersucht, ob der entsprechende User eine Session hat.
+     * @param userID ID des Benutzers
+     * @return true, wenn eine Session vorhanden ist, ansonsten false
+     */
+    public Boolean hasSession(int userID) {
+        return null;
+    }
 }

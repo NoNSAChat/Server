@@ -76,10 +76,11 @@ public interface ChatServerInterface extends Remote {
      * Erzeugt eine Freundschaft und legt die dazu passenden Keys an.
      * @param sessionKey SessionKey um sich zu authentifizieren.
      * @param friendID ID des Freundes-Benutzers.
+     * @throws UserNotFoundException Wird geworfen, wenn ein Benutzer nicht gefunden werden kann.
      * @throws SessionDeniedException Wird geworfen, wenn die genannte Session nicht gültig ist.
      * @throws InternalServerErrorException Wird geworfen, wenn ein Fehler auftritt, der nicht auftreten dürfte. Keine Fehlerbehandlung clientseitig möglich.
      */
-    public void addFriend (String sessionKey, int friendID) throws SessionDeniedException, InternalServerErrorException, RemoteException;
+    public void addFriend (String sessionKey, int friendID) throws UserNotFoundException, SessionDeniedException, InternalServerErrorException, RemoteException;
     
     
     /**

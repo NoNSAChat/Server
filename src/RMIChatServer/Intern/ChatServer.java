@@ -314,18 +314,61 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
 
     @Override
     public Friend[] getFriendlist(String sessionKey) throws InternalServerErrorException {
+        Friend[] friends = null;
+
+
+
         if (false) {
             throw new InternalServerErrorException();
         }
-        return null;
+        return friends;
     }
 
     @Override
-    public void addFriend(String sessionKey, int friendID) throws SessionDeniedException, InternalServerErrorException {
-        if (false) {
-            throw new InternalServerErrorException();
-        } else if (false) {
-            throw new SessionDeniedException();
+    public void addFriend(String sessionKey, int friendID) throws UserNotFoundException, SessionDeniedException, InternalServerErrorException {
+        //Checke Session auf Gültigkeit!
+        //SessionHandler.checkSession(sessionKey);
+        
+        String sql;
+        PreparedStatement statement;
+        ResultSet rs;
+        //int user = SessionHandler.getUserID(sessionKey);
+        //Für Tests
+        int user = 1;
+        int friend = friendID;
+        try {
+            //Überprüfe ob Benutzer vorhanden
+            sql = "SELECT count(*) as count FROM chatter.user WHERE id = ? OR id = ?;";
+            statement = MySQLConnection.prepareStatement(sql);
+            statement.setInt(1, user);
+            statement.setInt(1, friend);
+            rs = statement.executeQuery();
+            if(rs.getInt("count") != 2){
+                throw new UserNotFoundException("Benutzer konnten nicht gefunden weden!");
+            }
+            
+            //Überprüfe, ob Freunde schon vorhanden.
+            sql = "SELECT count(*) as count FROM chatter.friend WHERE (user = 1 AND friend = 2) OR (user = 2 AND friend = 1);";
+            statement = MySQLConnection.prepareStatement(sql);
+            statement.setInt(1, user);
+            statement.setInt(2, friend);
+            statement.setInt(3, friend);
+            statement.setInt(4, user);
+            rs = statement.executeQuery();
+            rs.first();
+            if (rs.getInt("count") > 0){
+                throw new InternalServerErrorException("Die Benutzer sind schon Freunde!");
+            }
+            
+            sql = "INSERT INTO `chatter`.`friend` (`id`, `user`, `friend`, `key`) VALUES (? ,?, ?, ?);";
+            statement = MySQLConnection.prepareStatement(sql);
+            if (false) {
+                throw new InternalServerErrorException();
+            } else if (false) {
+                throw new SessionDeniedException();
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
