@@ -61,9 +61,15 @@ public class CommonFunctions {
      * @throws NoSuchAlgorithmException
      * @author Pascal Lacmann
      */
-    public PublicKey byteToPublicKey(byte[] key) throws InvalidKeySpecException, NoSuchAlgorithmException {
-        PublicKey publicKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(key));
-        return publicKey;
+    public PublicKey byteToPublicKey(byte[] key) throws InternalServerErrorException {
+        try {
+            PublicKey publicKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(key));
+            return publicKey;
+        } catch (NoSuchAlgorithmException ex) {
+            throw new InternalServerErrorException("NoSuchAlgorithmException: " + ex.getMessage());
+        } catch (InvalidKeySpecException ex) {
+            throw new InternalServerErrorException("InvalidKeySpecException: " + ex.getMessage());
+        }
     }
 
     /**
@@ -76,9 +82,16 @@ public class CommonFunctions {
      * @throws NoSuchAlgorithmException
      * @author Pascal Lacmann
      */
-    public PrivateKey byteToPrivateKey(byte[] key) throws InvalidKeySpecException, NoSuchAlgorithmException {
-        PrivateKey PrivateKey = KeyFactory.getInstance("RSA").generatePrivate(new PKCS8EncodedKeySpec(key));
-        return PrivateKey;
+    public PrivateKey byteToPrivateKey(byte[] key) throws InternalServerErrorException {
+        try {
+            PrivateKey PrivateKey = KeyFactory.getInstance("RSA").generatePrivate(new PKCS8EncodedKeySpec(key));
+            return PrivateKey;
+        } catch (NoSuchAlgorithmException ex) {
+            throw new InternalServerErrorException("NoSuchAlgorithmException: " + ex.getMessage());
+        } catch (InvalidKeySpecException ex) {
+            throw new InternalServerErrorException("InvalidKeySpecException: " + ex.getMessage());
+        }
+
     }
 
     /**
@@ -92,9 +105,17 @@ public class CommonFunctions {
      * @throws BadPaddingException
      * @author Pascal Lacmann
      */
-    public byte[] AESEncrypt(byte[] code, Key key) throws InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
-        AESCipher.init(Cipher.ENCRYPT_MODE, key);
-        return AESCipher.doFinal(code);
+    public byte[] AESEncrypt(byte[] code, Key key) throws InternalServerErrorException {
+        try {
+            AESCipher.init(Cipher.ENCRYPT_MODE, key);
+            return AESCipher.doFinal(code);
+        } catch (InvalidKeyException ex) {
+            throw new InternalServerErrorException("InvalidKeySpecException: " + ex.getMessage());
+        } catch (IllegalBlockSizeException ex) {
+            throw new InternalServerErrorException("IllegalBlockSizeException: " + ex.getMessage());
+        } catch (BadPaddingException ex) {
+            throw new InternalServerErrorException("BadPaddingException: " + ex.getMessage());
+        }
     }
 
     /**
@@ -108,9 +129,17 @@ public class CommonFunctions {
      * @throws BadPaddingException
      * @author Pascal Lacmann
      */
-    public byte[] AESDecrypt(byte[] code, Key key) throws InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
-        AESCipher.init(Cipher.DECRYPT_MODE, key);
-        return AESCipher.doFinal(code);
+    public byte[] AESDecrypt(byte[] code, Key key) throws InternalServerErrorException {
+        try {
+            AESCipher.init(Cipher.DECRYPT_MODE, key);
+            return AESCipher.doFinal(code);
+        } catch (IllegalBlockSizeException ex) {
+            throw new InternalServerErrorException("IllegalBlockSizeException: " + ex.getMessage());
+        } catch (BadPaddingException ex) {
+            throw new InternalServerErrorException("BadPaddingException: " + ex.getMessage());
+        } catch (InvalidKeyException ex) {
+            throw new InternalServerErrorException("InvalidKeyException: " + ex.getMessage());
+        }
     }
 
     /**
@@ -124,9 +153,17 @@ public class CommonFunctions {
      * @throws BadPaddingException
      * @author Pascal Lacmann
      */
-    public byte[] RSAEncrypt(byte[] code, PublicKey key) throws InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
-        RSACipher.init(Cipher.ENCRYPT_MODE, key);
-        return RSACipher.doFinal(code);
+    public byte[] RSAEncrypt(byte[] code, PublicKey key) throws InternalServerErrorException {
+        try {
+            RSACipher.init(Cipher.ENCRYPT_MODE, key);
+            return RSACipher.doFinal(code);
+        } catch (IllegalBlockSizeException ex) {
+            throw new InternalServerErrorException("IllegalBlockSizeException: " + ex.getMessage());
+        } catch (BadPaddingException ex) {
+            throw new InternalServerErrorException("BadPaddingException: " + ex.getMessage());
+        } catch (InvalidKeyException ex) {
+            throw new InternalServerErrorException("InvalidKeyException: " + ex.getMessage());
+        }
     }
 
     /**
@@ -140,9 +177,17 @@ public class CommonFunctions {
      * @throws BadPaddingException
      * @author Pascal Lacmann
      */
-    public byte[] RSADecrypt(byte[] code, PrivateKey key) throws InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
-        RSACipher.init(Cipher.DECRYPT_MODE, key);
-        return RSACipher.doFinal(code);
+    public byte[] RSADecrypt(byte[] code, PrivateKey key) throws InternalServerErrorException {
+        try {
+            RSACipher.init(Cipher.DECRYPT_MODE, key);
+            return RSACipher.doFinal(code);
+        } catch (IllegalBlockSizeException ex) {
+            throw new InternalServerErrorException("IllegalBlockSizeException: " + ex.getMessage());
+        } catch (BadPaddingException ex) {
+            throw new InternalServerErrorException("BadPaddingException: " + ex.getMessage());
+        } catch (InvalidKeyException ex) {
+            throw new InternalServerErrorException("InvalidKeyException: " + ex.getMessage());
+        }
     }
 
     /**
@@ -208,7 +253,7 @@ public class CommonFunctions {
             Key key = new SecretKeySpec(stringForKey.getBytes("UTF-8"), "AES");
             return key;
         } catch (UnsupportedEncodingException ex) {
-            throw new InternalServerErrorException("UnsupportedEncodingException");
+            throw new InternalServerErrorException("UnsupportedEncodingException: " + ex.getMessage());
         }
     }
 

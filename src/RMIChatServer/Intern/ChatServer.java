@@ -28,7 +28,6 @@ import java.rmi.server.UnicastRemoteObject;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -346,28 +345,10 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
         int friend = friendID;
         try {
             //Überprüfe ob Benutzer vorhanden
-            sql = "SELECT count(*) as count FROM chatter.user WHERE id = ? OR id = ?;";
-            statement = MySQLConnection.prepareStatement(sql);
-            statement.setInt(1, user);
-            statement.setInt(2, friend);
-            rs = statement.executeQuery();
-            rs.first();
-            if (rs.getInt("count") != 2) {
-                throw new UserNotFoundException("Benutzer konnten nicht gefunden weden!");
-            }
+            checkUserExists(user, friend);
 
             //Überprüfe, ob Freunde schon vorhanden.
-            sql = "SELECT count(*) as count FROM chatter.friend WHERE (user = ? AND friend = ?) OR (user = ? AND friend = ?);";
-            statement = MySQLConnection.prepareStatement(sql);
-            statement.setInt(1, user);
-            statement.setInt(2, friend);
-            statement.setInt(3, friend);
-            statement.setInt(4, user);
-            rs = statement.executeQuery();
-            rs.first();
-            if (rs.getInt("count") > 0) {
-                throw new UserAreAlreadyFriendsException("Die Benutzer sind schon Freunde!");
-            }
+            checkFriendsExists(user, friend);
 
             //Lege Freunde an.
             //Lege Key an.
@@ -375,7 +356,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             kgen.init(128);
             Key key = kgen.generateKey();
             byte[] keyBytes = key.getEncoded();
-            
+
             //verschlüssele für user
             sql = "SELECT publicKey FROM chatter.user WHERE id = ?;";
             statement = MySQLConnection.prepareStatement(sql);
@@ -383,7 +364,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             rs = statement.executeQuery();
             rs.first();
             byte[] encryptedUserKey = function.RSAEncrypt(keyBytes, function.byteToPublicKey(rs.getBytes("publicKey")));
-            
+
             //Verschlüssle für friend
             sql = "SELECT publicKey FROM chatter.user WHERE id = ?;";
             statement = MySQLConnection.prepareStatement(sql);
@@ -391,7 +372,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             rs = statement.executeQuery();
             rs.first();
             byte[] encryptedFriendKey = function.RSAEncrypt(keyBytes, function.byteToPublicKey(rs.getBytes("publicKey")));
-            
+
             //lege Datensätze an für user
             sql = "INSERT INTO `chatter`.`friend` (`user`, `friend`, `key`) VALUES (?, ?, ?);";
             statement = MySQLConnection.prepareStatement(sql);
@@ -399,7 +380,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             statement.setInt(2, friend);
             statement.setBytes(3, encryptedUserKey);
             statement.executeUpdate();
-            
+
             //lege Datensätze an für user
             sql = "INSERT INTO `chatter`.`friend` (`user`, `friend`, `key`) VALUES (?, ?, ?);";
             statement = MySQLConnection.prepareStatement(sql);
@@ -407,7 +388,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             statement.setInt(2, user);
             statement.setBytes(3, encryptedFriendKey);
             statement.executeUpdate();
-            
+
         } catch (SQLException ex) {
             ex.printStackTrace();
             throw new InternalServerErrorException("SQLException: " + ex.getMessage());
@@ -431,6 +412,33 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
 
     @Override
     public byte[] getConversationKey(String sessionKey, int userID) throws SessionDeniedException, NoConversationFoundException, InternalServerErrorException {
+        //Checke Session auf Gültigkeit!
+        //SessionHandler.checkSession(sessionKey);
+
+        //int user = SessionHandler.getUserID(sessionKey);
+        //Für Tests
+        int user = 1;
+        int friend = userID;
+
+        String sql;
+        PreparedStatement statement;
+        ResultSet rs;
+
+        byte[] key;
+
+        try {
+            sql = "SELECT f.key FROM chatter.friend f WHERE user = ? AND friend = ?;";
+            statement = MySQLConnection.prepareStatement(sql);
+            statement.setInt(1, user);
+            statement.setInt(2, friend);
+            rs = statement.executeQuery();
+            rs.first();
+            key = rs.getBytes("key");
+
+        } catch (SQLException ex) {
+            throw new InternalServerErrorException("SQLException: " + ex.getMessage());
+        }
+
         if (false) {
             throw new SessionDeniedException();
         } else if (false) {
@@ -438,13 +446,65 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
         } else if (false) {
             throw new InternalServerErrorException();
         }
-        return null;
+        return key;
     }
 
     @Override
     public void logOff(String sessionKey) throws InternalServerErrorException {
         if (false) {
             throw new InternalServerErrorException();
+        }
+    }
+
+    private void checkUserExists(int user, int friend) throws UserNotFoundException, InternalServerErrorException {
+        try {
+            String sql = "SELECT count(*) as count FROM chatter.user WHERE id = ? OR id = ?;";
+            PreparedStatement statement = MySQLConnection.prepareStatement(sql);
+            statement.setInt(1, user);
+            statement.setInt(2, friend);
+            ResultSet rs = statement.executeQuery();
+            rs.first();
+            if (rs.getInt("count") != 2) {
+                throw new UserNotFoundException("Benutzer konnten nicht gefunden weden!");
+            }
+        } catch (SQLException ex) {
+            throw new InternalServerErrorException("SQLException: " + ex.getMessage());
+        }
+    }
+
+    private void checkConversationExsists(int user, int friend) throws InternalServerErrorException, NoConversationFoundException {
+        try {
+            String sql = "SELECT count(*) as count FROM chatter.friend WHERE (user = ? AND friend = ?) OR (user = ? AND friend = ?);";
+            PreparedStatement statement = MySQLConnection.prepareStatement(sql);
+            statement.setInt(1, user);
+            statement.setInt(2, friend);
+            statement.setInt(3, friend);
+            statement.setInt(4, user);
+            ResultSet rs = statement.executeQuery();
+            rs.first();
+            if (rs.getInt("count") != 2) {
+                throw new NoConversationFoundException("Die Benutzer sind keine Freunde!");
+            }
+        } catch (SQLException ex) {
+            throw new InternalServerErrorException("SQLException: " + ex.getMessage());
+        }
+    }
+
+    private void checkFriendsExists(int user, int friend) throws UserAreAlreadyFriendsException, InternalServerErrorException {
+        try {
+            String sql = "SELECT count(*) as count FROM chatter.friend WHERE (user = ? AND friend = ?) OR (user = ? AND friend = ?);";
+            PreparedStatement statement = MySQLConnection.prepareStatement(sql);
+            statement.setInt(1, user);
+            statement.setInt(2, friend);
+            statement.setInt(3, friend);
+            statement.setInt(4, user);
+            ResultSet rs = statement.executeQuery();
+            rs.first();
+            if (rs.getInt("count") > 0) {
+                throw new UserAreAlreadyFriendsException("Die Benutzer sind schon Freunde!");
+            }
+        } catch (SQLException ex) {
+            throw new InternalServerErrorException("SQLException: " + ex.getMessage());
         }
     }
 }
