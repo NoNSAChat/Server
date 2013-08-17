@@ -426,11 +426,11 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
     }
 
     @Override
-    public PublicKey getPublicKey(String sessionKey, int userID) throws SessionDeniedException, UserNotFoundException, InternalServerErrorException {
+    public byte[] getConversationKey(String sessionKey, int userID) throws SessionDeniedException, NoConversationFoundException, InternalServerErrorException {
         if (false) {
             throw new SessionDeniedException();
         } else if (false) {
-            throw new UserNotFoundException();
+            throw new NoConversationFoundException();
         } else if (false) {
             throw new InternalServerErrorException();
         }

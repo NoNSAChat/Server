@@ -19,7 +19,6 @@ import RMIChatServer.Exception.WrongPasswordException;
 import RMIChatServer.Message.Message;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.security.PublicKey;
 
 /**
  *
@@ -143,14 +142,16 @@ public interface ChatServerInterface extends Remote {
     public Friend[] getFriendlist (String sessionKey) throws SessionDeniedException, InternalServerErrorException, RemoteException;
     
     /**
-     * Gibt einen PublicKey für einen Benutzer zurück.
+     * Gibt einen verschlüsselten Key für eine Unterhaltung zurück.
+     * Mit dem private Key des Benutzers kann der Key entschlüsselt werden.
      * @param sessionKey SessionKey um sich zu authentifizieren.
-     * @param userID Benutzer ID, für den der PublicKey gesucht werden soll.
-     * @return Gibt einen PublicKey für einen Benutzer zurück.
-     * @throws UserNotFoundException Gibt alle Freunde eines Benutzer zurück.
+     * @param userID Benutzer ID, für die Freundschaft, nach der der Key gesucht werden soll.
+     * @return Gibt einen verschlüsselten Key für eine Unterhaltung zurück.
+     * @throws SessionDeniedException Wird geworfen, wenn die genannte Session nicht gültig ist.
+     * @throws NoConversationFoundException Wird geworfen, wenn die Benutzer keine Freunde sind.
      * @throws InternalServerErrorException Wird geworfen, wenn ein Fehler auftritt, der nicht auftreten dürfte. Keine Fehlerbehandlung clientseitig möglich.
      */
-    public PublicKey getPublicKey (String sessionKey, int userID) throws SessionDeniedException, UserNotFoundException, InternalServerErrorException, RemoteException;
+    public byte[] getConversationKey (String sessionKey, int userID) throws SessionDeniedException, NoConversationFoundException, InternalServerErrorException, RemoteException;
     
     /**
      * Zerstört die angegebene Session.
