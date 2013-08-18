@@ -30,6 +30,7 @@ import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
@@ -132,14 +133,14 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             KeyPair pair = keyGen.generateKeyPair();
             statement.setBytes(8,pair.getPublic().getEncoded());
             
-            SecretKey secKey = new SecretKeySpec(function.StringToByte(password),"AES");
+            MessageDigest MD5 = MessageDigest.getInstance("MD5");
+            SecretKey secKey = new SecretKeySpec(MD5.digest(function.StringToByte(password)),"AES");
             statement.setBytes(9, function.AESEncrypt(pair.getPublic().getEncoded(), secKey));
             res = statement.executeQuery();
             res.first();
             count = res.getInt(1);
         } catch (SQLException ex) {
-//            Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
-            throw new InternalServerErrorException();
+            Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
         } catch (NoSuchAlgorithmException ex) {
             Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
         }
