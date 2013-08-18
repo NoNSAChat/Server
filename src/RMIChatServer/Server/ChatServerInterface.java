@@ -13,12 +13,12 @@ import RMIChatServer.Exception.NoConversationFoundException;
 import RMIChatServer.Exception.PasswordInvalidException;
 import RMIChatServer.Exception.SessionDeniedException;
 import RMIChatServer.Exception.UserAlreadyExsistsException;
+import RMIChatServer.Exception.UserAreAlreadyFriendsException;
 import RMIChatServer.Exception.UserNotFoundException;
 import RMIChatServer.Exception.WrongPasswordException;
 import RMIChatServer.Message.Message;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.security.PublicKey;
 
 /**
  *
@@ -76,10 +76,12 @@ public interface ChatServerInterface extends Remote {
      * Erzeugt eine Freundschaft und legt die dazu passenden Keys an.
      * @param sessionKey SessionKey um sich zu authentifizieren.
      * @param friendID ID des Freundes-Benutzers.
+     * @throws UserAreAlreadyFriendsException Wird geworfen, wenn die Benutzer schon Freunde sind.
+     * @throws UserNotFoundException Wird geworfen, wenn ein Benutzer nicht gefunden werden kann.
      * @throws SessionDeniedException Wird geworfen, wenn die genannte Session nicht gültig ist.
      * @throws InternalServerErrorException Wird geworfen, wenn ein Fehler auftritt, der nicht auftreten dürfte. Keine Fehlerbehandlung clientseitig möglich.
      */
-    public void addFriend (String sessionKey, int friendID) throws SessionDeniedException, InternalServerErrorException, RemoteException;
+    public void addFriend (String sessionKey, int friendID) throws UserAreAlreadyFriendsException, UserNotFoundException, SessionDeniedException, InternalServerErrorException, RemoteException;
     
     
     /**
@@ -103,7 +105,7 @@ public interface ChatServerInterface extends Remote {
     public void sendMessage(String sessionKey, Message message) throws SessionDeniedException, UserNotFoundException, InternalServerErrorException, RemoteException;
     
     /**
-     * Gibt alle gesendete und empfangene Nachrichten einer Konversation zurück.
+     * Gibt alle gesendete und empfangene Nachrichten einer Konversation seit der angegebenen ID zurück.
      * Die erste Nachricht im Array hat die höchste und somit neuste ID.
      * Es werden je nach count definiert Nachrichten zurück gegeben.
      * @param sessionKey SessionKey um sich zu authentifizieren.
@@ -118,16 +120,18 @@ public interface ChatServerInterface extends Remote {
     public Message[] getLastMessages(String sessionKey, int user, int count, int id) throws SessionDeniedException, NoConversationFoundException, InternalServerErrorException, RemoteException;
     
     /**
-     * Gibt alle Nachrichten zurück, die empfangen oder gesendet wurden seit der angegeben ID.
+     * Gibt alle Nachrichten zurück, die empfangen oder gesendet wurden bis zu der angegeben ID.
+     * Die erste Nachricht in dem Array hat die höchste id.
      * @param sessionKey SessionKey um sich zu authentifizieren.
      * @param user Benutzer ID, dessen Konversation geladen werden soll.
      * @param lastID Nachrichten dürfen keine KLEINERE ID besitzen
+     * @param count Anzahl der Nachrichten
      * @return Gibt ein Array an Messages zurück. Hierbei ist bei der Message das Attribut "user" entweder die eigene ID oder die ID des Konversationspartners.
      * @throws SessionDeniedException Wird geworfen, wenn die genannte Session nicht gültig ist.
      * @throws NoConversationFoundException Wird geworfen, wenn keine Konversation mit einem Benutzer gefunden wurde (dürfte eigentlich nicht auftreten).
      * @throws InternalServerErrorException Wird geworfen, wenn ein Fehler auftritt, der nicht auftreten dürfte. Keine Fehlerbehandlung clientseitig möglich.
      */
-    public Message[] getMessagesSinceID (String sessionKey, int user, int lastID) throws SessionDeniedException, NoConversationFoundException, InternalServerErrorException, RemoteException;
+    public Message[] getMessagesSinceID (String sessionKey, int user, int lastID, int count) throws SessionDeniedException, NoConversationFoundException, InternalServerErrorException, RemoteException;
     
     /**
      * Gibt alle Freunde eines Benutzer zurück.
@@ -138,14 +142,16 @@ public interface ChatServerInterface extends Remote {
     public Friend[] getFriendlist (String sessionKey) throws SessionDeniedException, InternalServerErrorException, RemoteException;
     
     /**
-     * Gibt einen PublicKey für einen Benutzer zurück.
+     * Gibt einen verschlüsselten Key für eine Unterhaltung zurück.
+     * Mit dem private Key des Benutzers kann der Key entschlüsselt werden.
      * @param sessionKey SessionKey um sich zu authentifizieren.
-     * @param userID Benutzer ID, für den der PublicKey gesucht werden soll.
-     * @return Gibt einen PublicKey für einen Benutzer zurück.
-     * @throws UserNotFoundException Gibt alle Freunde eines Benutzer zurück.
+     * @param userID Benutzer ID, für die Freundschaft, nach der der Key gesucht werden soll.
+     * @return Gibt einen verschlüsselten Key für eine Unterhaltung zurück.
+     * @throws SessionDeniedException Wird geworfen, wenn die genannte Session nicht gültig ist.
+     * @throws NoConversationFoundException Wird geworfen, wenn die Benutzer keine Freunde sind.
      * @throws InternalServerErrorException Wird geworfen, wenn ein Fehler auftritt, der nicht auftreten dürfte. Keine Fehlerbehandlung clientseitig möglich.
      */
-    public PublicKey getPublicKey (String sessionKey, int userID) throws SessionDeniedException, UserNotFoundException, InternalServerErrorException, RemoteException;
+    public byte[] getConversationKey (String sessionKey, int userID) throws SessionDeniedException, NoConversationFoundException, InternalServerErrorException, RemoteException;
     
     /**
      * Zerstört die angegebene Session.

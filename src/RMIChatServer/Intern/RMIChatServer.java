@@ -24,7 +24,8 @@ public class RMIChatServer {
             System.out.println("Registry gestartet");
             
             //RMIServer starten
-            reg.bind("rmichatserver", new ChatServer());
+            ChatServer cs = new ChatServer();
+            reg.bind("rmichatserver", cs);
             System.out.println("Server bereit");
         } catch (RemoteException ex) {
             Logger.getLogger(RMIChatServer.class.getName()).log(Level.SEVERE, null, ex);
