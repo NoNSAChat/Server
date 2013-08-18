@@ -24,15 +24,32 @@ import java.io.File;
 import java.io.FileReader;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.security.InvalidKeyException;
+import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.SecureRandom;
+import java.security.spec.EncodedKeySpec;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Time;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 
 /**
  *
@@ -68,26 +85,69 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
 
     @Override
     public MyUser createUser(MyUser myUser, String password) throws UserAlreadyExsistsException, PasswordInvalidException, MailAlreadyInUseException, InternalServerErrorException {
-        String sql = "SELECT COUNT(*) FROM chatter.user WHERE username = ?;";
+        if (function.checkPassword(password) == false) {
+          throw new PasswordInvalidException();
+        }
         try {
-            PreparedStatement countusername = MySQLConnection.prepareStatement(sql);
-            countusername.setString(1, myUser.getUsername());
-            ResultSet res = countusername.executeQuery();
+            String sql = "SELECT COUNT(*) FROM chatter.user WHERE username = ?;";
+            PreparedStatement statement = MySQLConnection.prepareStatement(sql);
+            statement.setString(1, myUser.getUsername());
+            ResultSet res = statement.executeQuery();
             res.first();
             int count = res.getInt(1);
-        if (count > 0) {
-            throw new UserAlreadyExsistsException();
-        }
-        sql = "SELECT COUNT(*) FROM chatter.user WHERE username = ?;";
-        if (false) {
-            throw new MailAlreadyInUseException();
-        }
-        else if (false) {
-            throw new PasswordInvalidException();
-        }
+            if (count > 0) {
+                throw new UserAlreadyExsistsException();
+            }
+            sql = "SELECT COUNT(*) FROM chatter.user WHERE mail = ?;";
+            statement = MySQLConnection.prepareStatement(sql);
+            statement.setString(1, myUser.getMail());
+            res = statement.executeQuery();
+            res.first();
+            count = res.getInt(1);
+            if (count > 0) {
+                throw new MailAlreadyInUseException();
+            } 
+            
+            sql = "INSERT INTO chatter.user "
+                    + "(usernname, forename, lastname, residence, mail, password, salt, publikey, privatekey) "
+                    + "VALUES (?,?,?,?,?,?,?,?,?)";
+            statement = MySQLConnection.prepareStatement(sql);
+            statement.setString(1, myUser.getUsername());
+            statement.setString(2, myUser.getForename());
+            statement.setString(3, myUser.getLastname());
+            statement.setString(4, myUser.getResidence());
+            statement.setString(5, myUser.getMail());
+            
+            SecureRandom random = new SecureRandom();
+            byte seed[] = new byte[64];
+            random.nextBytes(seed);
+            statement.setBytes(6, function.HashPassword(password, seed));
+            statement.setBytes(7, seed);
+            
+            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA", "SUN");
+            keyGen.initialize(2048, random);
+            KeyPair pair = keyGen.generateKeyPair();
+            statement.setBytes(8,pair.getPublic().getEncoded());
+            
+            SecretKey secKey = new SecretKeySpec(function.StringToByte(password),"AES");
+            
+            statement.setBytes(9, function.AESEncrypt(pair.getPublic().getEncoded(), secKey));
+            res = statement.executeQuery();
+            res.first();
+            count = res.getInt(1);
         } catch (SQLException ex) {
+//            Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
+            throw new InternalServerErrorException();
+        } catch (NoSuchAlgorithmException ex) {
             Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
-            //throw new InternalServerErrorException();
+        } catch (NoSuchProviderException ex) {
+            Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (InvalidKeyException ex) {
+            Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IllegalBlockSizeException ex) {
+            Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (BadPaddingException ex) {
+            Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
         }
         
         System.out.println("MyUser erstellen");

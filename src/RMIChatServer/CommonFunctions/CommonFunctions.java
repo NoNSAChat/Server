@@ -219,10 +219,16 @@ public class CommonFunctions {
      * @return True, wenn die Richtlinien eingehalten wurden, sonst false.
      */
     public Boolean checkPassword(String password) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        if ((password.length() > 8) 
+                && (password.matches(".*[a-zA-Z]+.*"))
+                && (password.matches(".*[0-9]+.*"))
+                && (password.matches(".*\\p{Punct}+.*"))) {
+            return true;
+        }
+        return false;
     }
 
-    public Boolean PasswordsCorrect(String Passwort, String salt, byte[] Hash) {
+    public Boolean PasswordsCorrect(String Passwort, byte[] salt, byte[] Hash) {
         byte[] enteredPassword = HashPassword(Passwort, salt);
         if (enteredPassword.equals(Hash)) {
             return true;
@@ -238,7 +244,7 @@ public class CommonFunctions {
      * @param salt Salt, der an das Passwort angehängt wird.
      * @return Es wird der Hash zurückgegeben.
      */
-    public byte[] HashPassword(String password, String salt) {
+    public byte[] HashPassword(String password, byte[] salt) {
         return MD5.digest(StringToByte(password + salt));
     }
 }
