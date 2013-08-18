@@ -26,6 +26,7 @@ import java.io.FileReader;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.InvalidKeyException;
+import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -49,6 +50,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -125,13 +127,12 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             statement.setBytes(6, function.HashPassword(password, seed));
             statement.setBytes(7, seed);
             
-            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA", "SUN");
+            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
             keyGen.initialize(2048, random);
             KeyPair pair = keyGen.generateKeyPair();
             statement.setBytes(8,pair.getPublic().getEncoded());
             
             SecretKey secKey = new SecretKeySpec(function.StringToByte(password),"AES");
-            
             statement.setBytes(9, function.AESEncrypt(pair.getPublic().getEncoded(), secKey));
             res = statement.executeQuery();
             res.first();
@@ -141,17 +142,9 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             throw new InternalServerErrorException();
         } catch (NoSuchAlgorithmException ex) {
             Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (NoSuchProviderException ex) {
-            Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (InvalidKeyException ex) {
-            Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IllegalBlockSizeException ex) {
-            Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (BadPaddingException ex) {
-            Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        System.out.println("MyUser erstellen");
+        System.out.println("MyUser erstellt");
         return new MyUser(null, null, null, null, null, null);
     }
 
