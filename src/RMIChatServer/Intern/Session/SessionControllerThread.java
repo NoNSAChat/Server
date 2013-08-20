@@ -31,7 +31,7 @@ public class SessionControllerThread extends Thread {
             }
             now = System.nanoTime() / 1000000000;
             for (Session currentSession : session) {
-                if (currentSession.getEnd() > now) {
+                if (currentSession.getEnd() < now) {
                     session.remove(currentSession);
                 }
             }
