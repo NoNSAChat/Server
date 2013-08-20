@@ -616,4 +616,8 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             throw new InternalServerErrorException("SQLException: " + ex.getMessage());
         }
     }
+    
+    public void Test(){
+        System.out.println(SessionHandler.hasSession(1));
+    }
 }

@@ -27,6 +27,7 @@ public class RMIChatServer {
             ChatServer cs = new ChatServer();
             reg.bind("rmichatserver", cs);
             System.out.println("Server bereit");
+            cs.Test();
         } catch (RemoteException ex) {
             Logger.getLogger(RMIChatServer.class.getName()).log(Level.SEVERE, null, ex);
         } catch (AlreadyBoundException ex) {
