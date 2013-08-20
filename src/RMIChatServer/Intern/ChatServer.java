@@ -450,17 +450,17 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
     }
 
     @Override
-    public Friend[] getFriendlist(String sessionKey) throws InternalServerErrorException {
+    public Friend[] getFriendlist(String sessionKey) throws InternalServerErrorException, SessionDeniedException {
         Friend[] friends = null;
         //Checke Session auf Gültigkeit!
-        //SessionHandler.checkSession(sessionKey);
+        SessionHandler.checkSession(sessionKey);
 
         String sql;
         PreparedStatement statement;
         ResultSet rs;
-        //int user = SessionHandler.getUserID(sessionKey);
+        int user = SessionHandler.getUserID(sessionKey);
         //Für Tests
-        int user = 1;
+        //int user = 1;
 
         try {
             //Hole Daten aus DB
@@ -515,14 +515,14 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
     @Override
     public void addFriend(String sessionKey, int friendID) throws UserAreAlreadyFriendsException, UserNotFoundException, SessionDeniedException, InternalServerErrorException {
         //Checke Session auf Gültigkeit!
-        //SessionHandler.checkSession(sessionKey);
+        SessionHandler.checkSession(sessionKey);
 
         String sql;
         PreparedStatement statement;
         ResultSet rs;
-        //int user = SessionHandler.getUserID(sessionKey);
+        int user = SessionHandler.getUserID(sessionKey);
         //Für Tests
-        int user = 1;
+        //int user = 1;
         int friend = friendID;
         try {
             //Überprüfe ob Benutzer vorhanden
@@ -585,11 +585,11 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
     @Override
     public byte[] getConversationKey(String sessionKey, int userID) throws SessionDeniedException, NoConversationFoundException, InternalServerErrorException {
         //Checke Session auf Gültigkeit!
-        //SessionHandler.checkSession(sessionKey);
+        SessionHandler.checkSession(sessionKey);
 
-        //int user = SessionHandler.getUserID(sessionKey);
+        int user = SessionHandler.getUserID(sessionKey);
         //Für Tests
-        int user = 1;
+        //int user = 1;
         int friend = userID;
 
         String sql;
