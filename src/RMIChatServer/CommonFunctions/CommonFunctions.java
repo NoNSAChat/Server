@@ -4,6 +4,7 @@
  */
 package RMIChatServer.CommonFunctions;
 
+import RMIChatServer.Benutzer.MyUser;
 import RMIChatServer.Exception.InternalServerErrorException;
 import RMIChatServer.Exception.PasswordInvalidException;
 import java.io.UnsupportedEncodingException;
@@ -268,6 +269,22 @@ public class CommonFunctions {
                 && (password.matches(".*[a-zA-Z]+.*"))
                 && (password.matches(".*[0-9]+.*"))
                 && (password.matches(".*\\p{Punct}+.*"))) {
+            return true;
+        }
+        return false;
+    }
+    
+    /**
+     * Überprüft ob der übergebene myUser den Userrichtlinien entspricht.
+     *
+     * @param myUser Das myUser Objekt, welches untersucht werden soll.
+     * @return True, wenn die Richtlinien eingehalten wurden, sonst false.
+     */
+    public Boolean checkUserDetails(MyUser myUser) {
+        if (myUser.getUsername().length() > 0 && myUser.getUsername().length() <= 15
+            && myUser.getMail().length() > 0 && myUser.getMail().length() <= 30
+            && myUser.getForename().length() <= 15 && myUser.getLastname().length() <= 15
+            && myUser.getResidence().length() <= 15) {
             return true;
         }
         return false;

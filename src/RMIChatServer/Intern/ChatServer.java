@@ -25,32 +25,20 @@ import java.io.File;
 import java.io.FileReader;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.security.InvalidKeyException;
 import java.security.Key;
-import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.security.SecureRandom;
-import java.security.spec.EncodedKeySpec;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Time;
-import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -86,11 +74,81 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
         function = new CommonFunctions();
         SessionHandler = new SessionHandler();
     }
+    
+    private MyUser getMyUser(String username, String mail) throws InternalServerErrorException{
+        MyUser myUser = null;
+        try {
+            String sql = "SELECT * FROM chatter.user WHERE username = ? and mail = ?;";
+            PreparedStatement statement = MySQLConnection.prepareStatement(sql);
+            statement.setString(1, username);
+            statement.setString(2, mail);
+            ResultSet rs = statement.executeQuery();
+            rs.first();
+            
+            myUser = new MyUser(
+                    rs.getBytes("privatekey"),
+                    rs.getString("forename"), 
+                    rs.getString("lastname"),
+                    rs.getString("residence"),
+                    rs.getString("mail"), 
+                    null, //sessionKey
+                    rs.getInt("id"),
+                    rs.getString("username"));
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
+            throw new InternalServerErrorException();
+        }
+        return myUser;
+    }
+    
+    private PreparedStatement editUser(MyUser myUser) throws InternalServerErrorException, UserAlreadyExsistsException, MailAlreadyInUseException {
+        if (function.checkUserDetails(myUser) == false) {
+            throw new InternalServerErrorException();
+        }
+        try {
+            String sql = "SELECT COUNT(*) FROM chatter.user WHERE username = ?;";
+            PreparedStatement statement = MySQLConnection.prepareStatement(sql);
+            statement.setString(1, myUser.getUsername());
+            ResultSet res = statement.executeQuery();
+            res.first();
+            int count = res.getInt(1);
+            if (count > 0) {
+                throw new UserAlreadyExsistsException();
+            }
+            sql = "SELECT COUNT(*) FROM chatter.user WHERE mail = ?;";
+            statement = MySQLConnection.prepareStatement(sql);
+            statement.setString(1, myUser.getMail());
+            res = statement.executeQuery();
+            res.first();
+            count = res.getInt(1);
+            if (count > 0) {
+                throw new MailAlreadyInUseException();
+            }
 
+            sql = "INSERT INTO chatter.user "
+                    + "(username, forename, lastname, residence, mail) "
+                    + "VALUES (?,?,?,?,?,?,?,?,?);";
+            statement = MySQLConnection.prepareStatement(sql);
+            statement.setString(1, myUser.getUsername());
+            statement.setString(2, myUser.getForename());
+            statement.setString(3, myUser.getLastname());
+            statement.setString(4, myUser.getResidence());
+            statement.setString(5, myUser.getMail());
+            return statement;
+        } catch (SQLException ex) {
+            Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
+            throw new InternalServerErrorException();
+        }
+    }
+    
     @Override
     public MyUser createUser(MyUser myUser, String password) throws UserAlreadyExsistsException, PasswordInvalidException, MailAlreadyInUseException, InternalServerErrorException {
         if (function.checkPassword(password) == false) {
           throw new PasswordInvalidException();
+        }
+        if (function.checkUserDetails(myUser) == false) {
+          throw new InternalServerErrorException();
         }
         try {
             String sql = "SELECT COUNT(*) FROM chatter.user WHERE username = ?;";
@@ -113,8 +171,8 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             } 
             
             sql = "INSERT INTO chatter.user "
-                    + "(usernname, forename, lastname, residence, mail, password, salt, publikey, privatekey) "
-                    + "VALUES (?,?,?,?,?,?,?,?,?)";
+                    + "(username, forename, lastname, residence, mail, password, salt, publickey, privatekey) "
+                    + "VALUES (?,?,?,?,?,?,?,?,?);";
             statement = MySQLConnection.prepareStatement(sql);
             statement.setString(1, myUser.getUsername());
             statement.setString(2, myUser.getForename());
@@ -125,6 +183,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             SecureRandom random = new SecureRandom();
             byte seed[] = new byte[64];
             random.nextBytes(seed);
+            
             statement.setBytes(6, function.HashPassword(password, seed));
             statement.setBytes(7, seed);
             
@@ -136,24 +195,36 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             MessageDigest MD5 = MessageDigest.getInstance("MD5");
             SecretKey secKey = new SecretKeySpec(MD5.digest(function.StringToByte(password)),"AES");
             statement.setBytes(9, function.AESEncrypt(pair.getPublic().getEncoded(), secKey));
+            statement.executeUpdate();
+            
+            sql = "SELECT COUNT(*) FROM chatter.user WHERE username = ? and mail = ?;";
+            statement = MySQLConnection.prepareStatement(sql);
+            statement.setString(1, myUser.getUsername());
+            statement.setString(2, myUser.getMail());
             res = statement.executeQuery();
             res.first();
-            count = res.getInt(1);
+            
         } catch (SQLException ex) {
             Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
+            throw new InternalServerErrorException();
         } catch (NoSuchAlgorithmException ex) {
             Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
+            throw new InternalServerErrorException();
         }
-
-        System.out.println("MyUser erstellt");
-        return new MyUser(null, null, null, null, null, null);
+        
+        MyUser newUser = getMyUser(password, myUser.getMail());
+        if (!newUser.getUsername().equals("")) {
+            throw new InternalServerErrorException();
+        }
+        return newUser;
     }
 
     @Override
     public MyUser editUser(String sessionKey, MyUser myUser) throws SessionDeniedException, InternalServerErrorException {
         if (false) {
             throw new SessionDeniedException();
-        } else if (false) {
+        } 
+        if (false) {
             throw new InternalServerErrorException();
         }
         return null;

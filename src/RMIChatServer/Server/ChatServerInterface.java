@@ -34,7 +34,7 @@ public interface ChatServerInterface extends Remote {
      * @throws UserAlreadyExsistsException Wird geworfen, wenn ein Benutzer mit diesem Benutzernamen schon existiert.
      * @throws PasswordInvalidException Wird geworfen, wenn das Passwort nicht mit den Rcihtlinien übereinstimmt.
      * @throws MailAlreadyInUseException Wird geworfen, wenn ein Benutzer mit dieser E-Mail Adresse schon existiert.
-     * @throws InternalServerErrorException Wird geworfen, wenn ein Fehler auftritt, der nicht auftreten dürfte. Keine Fehlerbehandlung clientseitig möglich.
+     * @throws InternalServerErrorException Wird geworfen, wenn ein Fehler auftritt, der nicht auftreten dürfte. Keine Fehlerbehandlung clientseitig möglic
      */
     public MyUser createUser(MyUser myUser, String password) throws UserAlreadyExsistsException, PasswordInvalidException, MailAlreadyInUseException, InternalServerErrorException, RemoteException;
     
