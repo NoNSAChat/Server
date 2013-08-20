@@ -299,6 +299,9 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             }
             res.first();
             if (!Arrays.equals(res.getBytes("password"),function.HashPassword(password, res.getBytes("salt")))) {
+                System.out.println(res.getBytes("password"));
+                System.out.println(function.HashPassword(password, res.getBytes("salt")));
+                System.out.println("");
                 throw new WrongPasswordException();
             }
             MyUser newUser = getMyUser(username);
