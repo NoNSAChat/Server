@@ -75,13 +75,12 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
         SessionHandler = new SessionHandler();
     }
     
-    private MyUser getMyUser(String username, String mail) throws InternalServerErrorException{
+    private MyUser getMyUser(String username) throws InternalServerErrorException{
         MyUser myUser = null;
         try {
-            String sql = "SELECT * FROM chatter.user WHERE username = ? and mail = ?;";
+            String sql = "SELECT * FROM chatter.user WHERE username = ?;";
             PreparedStatement statement = MySQLConnection.prepareStatement(sql);
             statement.setString(1, username);
-            statement.setString(2, mail);
             ResultSet rs = statement.executeQuery();
             rs.first();
             
@@ -90,7 +89,8 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
                     rs.getString("forename"), 
                     rs.getString("lastname"),
                     rs.getString("residence"),
-                    rs.getString("mail"), 
+                    rs.getString("mail"),
+                    //TODO: SessionKey
                     null, //sessionKey
                     rs.getInt("id"),
                     rs.getString("username"));
@@ -165,8 +165,8 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             throw new InternalServerErrorException();
         }
         
-        MyUser newUser = getMyUser(myUser.getUsername(), myUser.getMail());
-        if (!newUser.getUsername().equals("")) {
+        MyUser newUser = getMyUser(myUser.getUsername());
+        if (newUser.getUsername().equals("")) {
             System.out.println("Benutzer nicht korrekt angelegt");
             throw new InternalServerErrorException();
         }
@@ -214,8 +214,8 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             statement.setInt(6, oldUserID);
             statement.executeUpdate();
 
-            MyUser newUser = getMyUser(editUser.getUsername(), editUser.getMail());
-            if (!newUser.getUsername().equals("")) {
+            MyUser newUser = getMyUser(editUser.getUsername());
+            if (newUser.getUsername().equals("")) {
                 System.out.println("Benutzer nicht korrekt geändert");
                 throw new InternalServerErrorException();
             }
@@ -248,15 +248,31 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
 
     @Override
     public MyUser login(String username, String password) throws WrongPasswordException, UserNotFoundException, InternalServerErrorException {
-        if (false) {
-            throw new UserNotFoundException();
-        } else if (false) {
+        try {
+            String sql = "SELECT * FROM chatter.user WHERE username = ?;";
+            PreparedStatement statement;
+            statement = MySQLConnection.prepareStatement(sql);
+            statement.setString(1, username);
+            ResultSet res = statement.executeQuery();
+            res.last();
+
+            if (res.getRow() == 0) {
+                throw new UserNotFoundException();
+            }
+            res.first();
+            if (res.getBytes("password") != function.HashPassword(password, res.getBytes("seed"))) {
+                throw new WrongPasswordException();
+            }
+            MyUser newUser = getMyUser(username);
+            if (newUser.getUsername().equals("")) {
+                System.out.println("Benutzer nicht korrekt geändert");
+                throw new InternalServerErrorException();
+            }
+            return newUser;
+        } catch (SQLException ex) {
+            Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
             throw new InternalServerErrorException();
-        } else if (false) {
-            throw new WrongPasswordException();
         }
-        throw new WrongPasswordException("Du bist blöd");
-        //return null;
     }
 
     @Override
