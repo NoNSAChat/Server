@@ -28,8 +28,8 @@ public class SessionHandler {
         Thread sessionController = new SessionControllerThread(session);
         sessionController.start();
         //Für Tests
-        session.add(new Session(1, "user1"));
-        session.add(new Session(1, "user2"));
+        session.add(new Session(12, "user12"));
+        session.add(new Session(13, "user13"));
     }
 
     /**

@@ -316,11 +316,11 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
     @Override
     public void sendMessage(String sessionKey, Message message) throws SessionDeniedException, UserNotFoundException, InternalServerErrorException {
         //checke Session auf Gültigkeit
-        //SessionHandler.checkSession(sessionKey);
+        SessionHandler.checkSession(sessionKey);
 
-        //int sender = SessionHandler.getUserID(sessionKey);
+        int sender = SessionHandler.getUserID(sessionKey);
         //Für Tests
-        int sender = 1;
+        //int sender = 1;
         int reciever = message.getUser();
 
         if (message.getUser() == sender) {
@@ -369,12 +369,12 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
     public Message[] getLastMessages(String sessionKey, int user, int count, int id) throws SessionDeniedException, NoConversationFoundException, InternalServerErrorException {
 
         //checke Session auf Gültigkeit
-        //SessionHandler.checkSession(sessionKey);
+        SessionHandler.checkSession(sessionKey);
 
         Message[] messages = null;
-        //int sender = SessionHandler.getUserID(sessionKey);
+        int sender = SessionHandler.getUserID(sessionKey);
         //Für Tests
-        int sender = 1;
+        //int sender = 1;
         int reciever = user;
         String sql = "";
         PreparedStatement statement = null;
@@ -438,13 +438,13 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
     @Override
     public Message[] getMessagesSinceID(String sessionKey, int user, int lastID, int count) throws SessionDeniedException, NoConversationFoundException, InternalServerErrorException {
         //checke Session auf Gültigkeit
-        //SessionHandler.checkSession(sessionKey);
+        SessionHandler.checkSession(sessionKey);
 
         Message[] messages = null;
         try {
             //Für Tests
-            int sender = 1;
-            //int sender = SessionHandler.getUserID(sessionKey);
+            //int sender = 1;
+            int sender = SessionHandler.getUserID(sessionKey);
             int reciever = user;
 
             //Lade Nachrichten aus DB
@@ -492,14 +492,65 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
     @Override
     public Friend[] getFriendlist(String sessionKey) throws InternalServerErrorException {
         Friend[] friends = null;
+        //Checke Session auf Gültigkeit!
+        //SessionHandler.checkSession(sessionKey);
 
+        String sql;
+        PreparedStatement statement;
+        ResultSet rs;
+        //int user = SessionHandler.getUserID(sessionKey);
+        //Für Tests
+        int user = 1;
 
+        try {
+            //Hole Daten aus DB
+            sql = "SELECT user.id, user.username, max(message.seen) as seen "
+                    + "FROM chatter.friend friend, chatter.user user, chatter.message message "
+                    + "WHERE friend.user = ? "
+                    + "AND friend.friend = (SELECT friend.friend FROM chatter.friend friend WHERE friend.user = ?) "
+                    + "AND friend.friend = user.id "
+                    + "AND message.reciever = friend.user AND message.sender = friend.friend;";
+            statement = MySQLConnection.prepareStatement(sql);
+            statement.setInt(1, user);
+            statement.setInt(2, user);
+
+            rs = statement.executeQuery();
+
+            //Schreibe Ergebnis um
+            int count = 0;
+            if (rs.first()) {
+                count++;
+                while (rs.next()) {
+                    count++;
+                }
+            }
+            friends = new Friend[count];
+            rs.first();
+            int friendID;
+            String username;
+            Boolean newMessage;
+            Boolean isOnline = null;
+            for (int i = 0; i < count; i++) {
+                friendID = rs.getInt("id");
+                username = rs.getString("username");
+                if (rs.getInt("seen") == 0) {
+                    newMessage = false;
+                } else {
+                    newMessage = true;
+                }
+                //isOnline = SessionHandler.hasSession(user);
+                friends[i] = new Friend(newMessage, isOnline, friendID, username);
+            }
+        } catch (SQLException ex) {
+            throw new InternalServerErrorException("SQLException: " + ex.getMessage());
+        }
 
         if (false) {
             throw new InternalServerErrorException();
         }
         return friends;
     }
+
 
     @Override
     public void addFriend(String sessionKey, int friendID) throws UserAreAlreadyFriendsException, UserNotFoundException, SessionDeniedException, InternalServerErrorException {
