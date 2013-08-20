@@ -4,6 +4,8 @@
  */
 package RMIChatServer.Intern.Session;
 
+import java.util.Objects;
+
 /**
  *
  * @author Pascal
@@ -43,6 +45,27 @@ public class Session {
 
     public void setSessionKey(String sessionKey) {
         this.sessionKey = sessionKey;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final Session other = (Session) obj;
+        if (!Objects.equals(this.sessionKey, other.sessionKey)) {
+            return false;
+        }
+        return true;
     }
     
     

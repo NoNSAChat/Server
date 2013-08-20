@@ -5,7 +5,11 @@
 package RMIChatServer.Intern.Session;
 
 import RMIChatServer.Exception.SessionDeniedException;
+import java.math.BigInteger;
+import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -13,7 +17,7 @@ import java.util.ArrayList;
  */
 public class SessionHandler {
 
-    private ArrayList session;
+    private ArrayList<Session> session;
 
     /**
      * Erstellt einen neuen SessionHandler. Er ist für die Verwaltung von
@@ -21,6 +25,10 @@ public class SessionHandler {
      */
     public SessionHandler() {
         this.session = new ArrayList<Session>();
+        new SessionControllerThread(session).run();
+        //Für Tests
+        session.add(new Session(1, "user1"));
+        session.add(new Session(1, "user2"));
     }
 
     /**
@@ -30,7 +38,16 @@ public class SessionHandler {
      * @return true, falls die Session gültig ist, ansonsten false
      */
     public void checkSession(String sessionKey) throws SessionDeniedException {
-        throw new UnsupportedOperationException("Not supported yet.");
+        if (containsSession(sessionKey)) {
+        } else {
+            Session currentSession = getSession(sessionKey);
+            long timeDiff = (System.nanoTime() / 1000000000) - currentSession.getEnd();
+            if (timeDiff < 0) {
+                destroySession(sessionKey);
+                throw new SessionDeniedException("Diese Session ist abgelaufen");
+            }
+            currentSession.setEnd((System.nanoTime() / 1000000000) + (60 * 5));
+        }
     }
 
     /**
@@ -40,7 +57,10 @@ public class SessionHandler {
      * @return Einen String, der die Session identifiziert.
      */
     public String generateSession(int userID) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        SecureRandom random = new SecureRandom();
+        String sessionKey = new BigInteger(130, random).toString(32);
+        session.add(new Session(userID, sessionKey));
+        return sessionKey;
     }
 
     /**
@@ -50,7 +70,11 @@ public class SessionHandler {
      * soll.
      */
     public void destroySession(String sessionKey) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        try {
+            session.remove(getSession(sessionKey));
+        } catch (SessionDeniedException ex) {
+            Logger.getLogger(SessionHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     /**
@@ -60,7 +84,15 @@ public class SessionHandler {
      * sollen.
      */
     public void destroyAllSessions(int userID) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        for (Session currentSession : session) {
+            if (currentSession.getUser() == userID) {
+                try {
+                    session.remove(getSession(currentSession.getSessionKey()));
+                } catch (SessionDeniedException ex) {
+                    Logger.getLogger(SessionHandler.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
     }
 
     /**
@@ -71,15 +103,39 @@ public class SessionHandler {
      * @throws SessionDeniedException
      */
     public int getUserID(String sessionKey) throws SessionDeniedException {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return getSession(sessionKey).getUser();
     }
-    
+
     /**
      * Untersucht, ob der entsprechende User eine Session hat.
+     *
      * @param userID ID des Benutzers
      * @return true, wenn eine Session vorhanden ist, ansonsten false
      */
     public Boolean hasSession(int userID) {
-        return null;
+        for (Session currentSession : session) {
+            if (currentSession.getUser() == userID) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private Boolean containsSession(String sessionKey) {
+        for (Session currentSession : session) {
+            if (currentSession.getSessionKey().equals(sessionKey)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private Session getSession(String sessionKey) throws SessionDeniedException {
+        for (Session currentSession : session) {
+            if (currentSession.getSessionKey().equals(sessionKey)) {
+                return currentSession;
+            }
+        }
+        throw new SessionDeniedException("Session konnte nicht gefunden werden!");
     }
 }
