@@ -492,6 +492,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
 
     @Override
     public void logOff(String sessionKey) throws InternalServerErrorException {
+        SessionHandler.destroySession(sessionKey);
         if (false) {
             throw new InternalServerErrorException();
         }
