@@ -537,9 +537,9 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
                 friendID = rs.getInt("id");
                 username = rs.getString("username");
                 if (rs.getInt("seen") == 0) {
-                    newMessage = false;
-                } else {
                     newMessage = true;
+                } else {
+                    newMessage = false;
                 }
                 //isOnline = SessionHandler.hasSession(user);
                 friends[i] = new Friend(newMessage, isOnline, friendID, username);
