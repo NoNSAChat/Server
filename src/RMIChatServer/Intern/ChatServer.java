@@ -37,6 +37,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.crypto.KeyGenerator;
@@ -260,7 +261,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
                 throw new UserNotFoundException();
             }
             res.first();
-            if (!res.getBytes("password").equals(function.HashPassword(password, res.getBytes("salt")))) {
+            if (!Arrays.equals(res.getBytes("password"),function.HashPassword(password, res.getBytes("salt")))) {
                 throw new WrongPasswordException();
             }
             MyUser newUser = getMyUser(username);
