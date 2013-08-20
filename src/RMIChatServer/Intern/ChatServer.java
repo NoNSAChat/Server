@@ -102,46 +102,6 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
         return myUser;
     }
     
-    private PreparedStatement editUser(MyUser myUser) throws InternalServerErrorException, UserAlreadyExsistsException, MailAlreadyInUseException {
-        if (function.checkUserDetails(myUser) == false) {
-            throw new InternalServerErrorException();
-        }
-        try {
-            String sql = "SELECT COUNT(*) FROM chatter.user WHERE username = ?;";
-            PreparedStatement statement = MySQLConnection.prepareStatement(sql);
-            statement.setString(1, myUser.getUsername());
-            ResultSet res = statement.executeQuery();
-            res.first();
-            int count = res.getInt(1);
-            if (count > 0) {
-                throw new UserAlreadyExsistsException();
-            }
-            sql = "SELECT COUNT(*) FROM chatter.user WHERE mail = ?;";
-            statement = MySQLConnection.prepareStatement(sql);
-            statement.setString(1, myUser.getMail());
-            res = statement.executeQuery();
-            res.first();
-            count = res.getInt(1);
-            if (count > 0) {
-                throw new MailAlreadyInUseException();
-            }
-
-            sql = "INSERT INTO chatter.user "
-                    + "(username, forename, lastname, residence, mail) "
-                    + "VALUES (?,?,?,?,?,?,?,?,?);";
-            statement = MySQLConnection.prepareStatement(sql);
-            statement.setString(1, myUser.getUsername());
-            statement.setString(2, myUser.getForename());
-            statement.setString(3, myUser.getLastname());
-            statement.setString(4, myUser.getResidence());
-            statement.setString(5, myUser.getMail());
-            return statement;
-        } catch (SQLException ex) {
-            Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
-            throw new InternalServerErrorException();
-        }
-    }
-    
     @Override
     public MyUser createUser(MyUser myUser, String password) throws UserAlreadyExsistsException, PasswordInvalidException, MailAlreadyInUseException, InternalServerErrorException {
         if (function.checkPassword(password) == false) {
@@ -205,7 +165,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             throw new InternalServerErrorException();
         }
         
-        MyUser newUser = getMyUser(password, myUser.getMail());
+        MyUser newUser = getMyUser(myUser.getUsername(), myUser.getMail());
         if (!newUser.getUsername().equals("")) {
             System.out.println("Benutzer nicht korrekt angelegt");
             throw new InternalServerErrorException();
