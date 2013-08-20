@@ -16,7 +16,7 @@ import java.util.logging.Logger;
  * @author Pascal
  */
 public class SessionHandler {
-    
+
     private ArrayList<Session> session;
 
     /**
@@ -126,7 +126,7 @@ public class SessionHandler {
         }
         return false;
     }
-    
+
     private Boolean containsSession(String sessionKey) {
         for (Session currentSession : session) {
             if (currentSession.getSessionKey().equals(sessionKey)) {
@@ -135,7 +135,7 @@ public class SessionHandler {
         }
         return false;
     }
-    
+
     private Session getSession(String sessionKey) throws SessionDeniedException {
         for (Session currentSession : session) {
             if (currentSession.getSessionKey().equals(sessionKey)) {
@@ -144,11 +144,11 @@ public class SessionHandler {
         }
         throw new SessionDeniedException("Session konnte nicht gefunden werden!");
     }
-    
+
     private void resetTime(Session sessionToReset) {
         sessionToReset.setEnd((System.nanoTime() / 1000000000) + (60 * 5));
     }
-    
+
     private void resetTime(String sessionKey) {
         for (Session currentSession : session) {
             if (currentSession.getSessionKey().equals(sessionKey)) {
@@ -156,9 +156,9 @@ public class SessionHandler {
             }
         }
     }
-    
+
     private void checkSessionTime(Session currentSession) throws SessionDeniedException {
-        if (currentSession.getEnd() > System.nanoTime() / 1000000000) {
+        if (currentSession.getEnd() < (System.nanoTime() / 1000000000)) {
             session.remove(currentSession);
             throw new SessionDeniedException("Die Session ist abgelaufen");
         }
