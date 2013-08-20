@@ -76,7 +76,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
         SessionHandler = new SessionHandler();
     }
     
-    private MyUser getMyUser(String username) throws InternalServerErrorException{
+    private MyUser getMyUser(String username) throws InternalServerErrorException {
         MyUser myUser = null;
         try {
             String sql = "SELECT * FROM chatter.user WHERE username = ?;";
@@ -84,17 +84,17 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             statement.setString(1, username);
             ResultSet rs = statement.executeQuery();
             rs.first();
-            
+
             myUser = new MyUser(
                     rs.getBytes("privatekey"),
-                    rs.getString("forename"), 
+                    rs.getString("forename"),
                     rs.getString("lastname"),
                     rs.getString("residence"),
                     rs.getString("mail"),
                     SessionHandler.generateSession(rs.getInt("id")),
                     rs.getInt("id"),
                     rs.getString("username"));
-            
+
         } catch (SQLException ex) {
             Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
             throw new InternalServerErrorException();
@@ -105,10 +105,10 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
     @Override
     public MyUser createUser(MyUser myUser, String password) throws UserAlreadyExsistsException, PasswordInvalidException, MailAlreadyInUseException, InternalServerErrorException {
         if (function.checkPassword(password) == false) {
-          throw new PasswordInvalidException();
+            throw new PasswordInvalidException();
         }
         if (function.checkUserDetails(myUser) == false) {
-          throw new InternalServerErrorException();
+            throw new InternalServerErrorException();
         }
         try {
             String sql = "SELECT COUNT(*) FROM chatter.user WHERE username = ?;";
@@ -128,8 +128,8 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             count = res.getInt(1);
             if (count > 0) {
                 throw new MailAlreadyInUseException();
-            } 
-            
+            }
+
             sql = "INSERT INTO chatter.user "
                     + "(username, forename, lastname, residence, mail, password, salt, publickey, privatekey) "
                     + "VALUES (?,?,?,?,?,?,?,?,?);";
@@ -139,24 +139,22 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             statement.setString(3, myUser.getLastname());
             statement.setString(4, myUser.getResidence());
             statement.setString(5, myUser.getMail());
-            
+
             SecureRandom random = new SecureRandom();
             byte seed[] = new byte[64];
             random.nextBytes(seed);
-            
+
             statement.setBytes(6, function.HashPassword(password, seed));
             statement.setBytes(7, seed);
 
             KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
             keyGen.initialize(2048, random);
             KeyPair pair = keyGen.generateKeyPair();
-            statement.setBytes(8,pair.getPublic().getEncoded());
-            
-            MessageDigest MD5 = MessageDigest.getInstance("MD5");
-            SecretKey secKey = new SecretKeySpec(MD5.digest(function.StringToByte(password)),"AES");
-            statement.setBytes(9, function.AESEncrypt(pair.getPublic().getEncoded(), secKey));
+            statement.setBytes(8, pair.getPublic().getEncoded());
+
+            statement.setBytes(9, generatePrivateKey(password, pair));
             statement.executeUpdate();
-                    
+
         } catch (SQLException ex) {
             Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
             throw new InternalServerErrorException();
@@ -164,7 +162,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
             throw new InternalServerErrorException();
         }
-        
+
         MyUser newUser = getMyUser(myUser.getUsername());
         if (newUser.getUsername().equals("")) {
             System.out.println("Benutzer nicht korrekt angelegt");
@@ -172,13 +170,19 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
         }
         return newUser;
     }
+    
+    private byte[] generatePrivateKey(String password, KeyPair pair) throws NoSuchAlgorithmException, InternalServerErrorException {
+        MessageDigest MD5 = MessageDigest.getInstance("MD5");
+        SecretKey secKey = new SecretKeySpec(MD5.digest(function.StringToByte(password)), "AES");
+        return function.AESEncrypt(pair.getPublic().getEncoded(), secKey);
+    }
 
     @Override
     public MyUser editUser(String sessionKey, MyUser editUser) throws SessionDeniedException, InternalServerErrorException, UserAlreadyExsistsException, MailAlreadyInUseException {
 
-       SessionHandler.checkSession(sessionKey);
-       int oldUserID = SessionHandler.getUserID(sessionKey);
-       
+        SessionHandler.checkSession(sessionKey);
+        int oldUserID = SessionHandler.getUserID(sessionKey);
+
         if (function.checkUserDetails(editUser) == false) {
             throw new InternalServerErrorException();
         }
@@ -225,15 +229,51 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
     }
 
     @Override
-    public byte[] editPassword(String sessionKey, String oldPassword, String newPassword) throws SessionDeniedException, PasswordInvalidException, InternalServerErrorException {
-        if (false) {
-            throw new PasswordInvalidException();
-        } else if (false) {
+    public byte[] editPassword(String sessionKey, String oldPassword, String newPassword) throws SessionDeniedException, PasswordInvalidException, WrongPasswordException, InternalServerErrorException {
+       SessionHandler.checkSession(sessionKey);
+       int userID = SessionHandler.getUserID(sessionKey);
+       
+       try {
+            if (function.checkPassword(newPassword) == false) {
+                throw new PasswordInvalidException();
+            }
+            String sql = "SELECT * FROM chatter.user WHERE id = ?;";
+            PreparedStatement statement = MySQLConnection.prepareStatement(sql);
+            statement.setInt(1, userID);
+            ResultSet res = statement.executeQuery();
+         
+            res.first();
+            if (!Arrays.equals(res.getBytes("password"),function.HashPassword(oldPassword, res.getBytes("salt")))) {
+                throw new WrongPasswordException();
+            }
+            
+            sql = "UPDATE chatter.user SET password = ?, salt = ?, publickey = ?, privatekey = ?;";
+            statement = MySQLConnection.prepareStatement(sql);
+            statement.setInt(1, userID);
+            
+            SecureRandom random = new SecureRandom();
+            byte seed[] = new byte[64];
+            random.nextBytes(seed);
+
+            statement.setBytes(1, function.HashPassword(newPassword, seed));
+            statement.setBytes(2, seed);
+
+            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+            keyGen.initialize(2048, random);
+            KeyPair pair = keyGen.generateKeyPair();
+            statement.setBytes(3, pair.getPublic().getEncoded());
+            statement.setBytes(4, generatePrivateKey(newPassword, pair));
+            statement.executeUpdate();
+            
+            return generatePrivateKey(newPassword, pair);
+        
+        } catch (SQLException ex) {
+            Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
             throw new InternalServerErrorException();
-        } else if (false) {
-            throw new SessionDeniedException();
+        } catch (NoSuchAlgorithmException ex) {
+            Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
+            throw new InternalServerErrorException();
         }
-        return null;
     }
 
     @Override

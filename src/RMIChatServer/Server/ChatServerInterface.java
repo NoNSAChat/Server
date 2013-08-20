@@ -57,10 +57,11 @@ public interface ChatServerInterface extends Remote {
      * @param oldPassword Das alte Passwort.
      * @param newPassword Das neue Passwort.
      * @return Es wird der neu verschlüsselte PrivateKey zurück gegeben.
+     * @throws WrongPasswordException Wird geworfen, falls das Passwort nicht übereinstimmt.
      * @throws PasswordInvalidException Wird geworfen, wenn das Passwort nicht mit den Rcihtlinien übereinstimmt.
      * @throws InternalServerErrorException Wird geworfen, wenn ein Fehler auftritt, der nicht auftreten dürfte. Keine Fehlerbehandlung clientseitig möglich.
      */
-    public byte[] editPassword (String sessionKey, String oldPassword, String newPassword) throws SessionDeniedException, PasswordInvalidException, InternalServerErrorException, RemoteException;
+    public byte[] editPassword (String sessionKey, String oldPassword, String newPassword) throws SessionDeniedException, PasswordInvalidException, WrongPasswordException, InternalServerErrorException, RemoteException;
     
     /**
      * Sucht nach neuen Freunden.
