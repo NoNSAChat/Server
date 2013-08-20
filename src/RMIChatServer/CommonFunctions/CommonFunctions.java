@@ -18,6 +18,7 @@ import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.crypto.BadPaddingException;
@@ -298,6 +299,6 @@ public class CommonFunctions {
      * @return Es wird der Hash zurückgegeben.
      */
     public byte[] HashPassword(String password, byte[] salt) {
-        return MD5.digest(StringToByte(password + salt));
+        return MD5.digest(StringToByte(password + Arrays.toString(salt)));
     }
 }

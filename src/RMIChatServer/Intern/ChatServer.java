@@ -91,8 +91,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
                     rs.getString("lastname"),
                     rs.getString("residence"),
                     rs.getString("mail"),
-                    //TODO: SessionKey
-                    null, //sessionKey
+                    SessionHandler.generateSession(rs.getInt("id")),
                     rs.getInt("id"),
                     rs.getString("username"));
             
@@ -147,7 +146,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             
             statement.setBytes(6, function.HashPassword(password, seed));
             statement.setBytes(7, seed);
-            
+
             KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
             keyGen.initialize(2048, random);
             KeyPair pair = keyGen.generateKeyPair();
@@ -176,12 +175,10 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
 
     @Override
     public MyUser editUser(String sessionKey, MyUser editUser) throws SessionDeniedException, InternalServerErrorException, UserAlreadyExsistsException, MailAlreadyInUseException {
-        //TODO: Ändern wenn Sessionkey eine Funktion hat
-        int oldUserID = editUser.getId();
-        //int oldUserID = SessionHandler.getUserID(sessionKey);
-        if (false) {
-            throw new SessionDeniedException();
-        }
+
+       SessionHandler.checkSession(sessionKey);
+       int oldUserID = SessionHandler.getUserID(sessionKey);
+       
         if (function.checkUserDetails(editUser) == false) {
             throw new InternalServerErrorException();
         }
@@ -266,7 +263,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             }
             MyUser newUser = getMyUser(username);
             if (newUser.getUsername().equals("")) {
-                System.out.println("Benutzer nicht korrekt geändert");
+                System.out.println("Benutzer nicht gefunden");
                 throw new InternalServerErrorException();
             }
             return newUser;
