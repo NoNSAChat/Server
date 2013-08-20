@@ -43,10 +43,12 @@ public interface ChatServerInterface extends Remote {
      * @param sessionKey SessionKey um sich zu authentifizieren.
      * @param myUser Ein generiert MyUser, die Attribute "id", "username", "encyptedPrivateKey", "sessionKey" werden ignoert und somit nicht editiert.
      * @return Gibt einen vollständig generierten MyUser zurück. Alle Attribute enthalten aktuelle Werte.
-     * @throws Wird geworfen, wenn die genannte Session nicht gültig ist.
+     * @throws SessionDeniedException Wird geworfen, wenn die genannte Session nicht gültig ist.
      * @throws InternalServerErrorException Wird geworfen, wenn ein Fehler auftritt, der nicht auftreten dürfte. Keine Fehlerbehandlung clientseitig möglich.
+     * @throws UserAlreadyExsistsException Wird geworfen, wenn ein Benutzer mit diesem Benutzernamen schon existiert.
+     * @throws MailAlreadyInUseException Wird geworfen, wenn ein Benutzer mit dieser E-Mail Adresse schon existiert.
      */
-    public MyUser editUser(String sessionKey, MyUser myUser) throws SessionDeniedException, InternalServerErrorException, RemoteException;
+    public MyUser editUser(String sessionKey, MyUser myUser) throws SessionDeniedException, InternalServerErrorException, UserAlreadyExsistsException, MailAlreadyInUseException, RemoteException;
     
     /**
      * Ändert das Passwort eines Benutzers.
