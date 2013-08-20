@@ -290,15 +290,6 @@ public class CommonFunctions {
         return false;
     }
 
-    public Boolean PasswordsCorrect(String Passwort, byte[] salt, byte[] Hash) {
-        byte[] enteredPassword = HashPassword(Passwort, salt);
-        if (enteredPassword.equals(Hash)) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     /**
      * Hasht einen String.
      *
