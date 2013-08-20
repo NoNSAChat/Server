@@ -445,7 +445,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
         ResultSet rs;
         //int user = SessionHandler.getUserID(sessionKey);
         //Für Tests
-        int user = 1;
+        int user = 2;
 
         try {
             //Hole Daten aus DB
