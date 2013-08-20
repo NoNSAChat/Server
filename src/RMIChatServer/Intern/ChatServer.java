@@ -37,6 +37,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -278,10 +279,29 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
 
     @Override
     public User[] searchFriend(String username, String forename, String lastname, String residence, String mail) throws InternalServerErrorException {
-        if (false) {
+        try {
+            String sql = "SELECT id,username FROM chatter.user WHERE username LIKE '%?%' and fandename LIKE '%?%' "
+                    + "and lastname LIKE '%?%' and residence LIKE '%?%' and mail LIKE '%?%';";
+            PreparedStatement statement = MySQLConnection.prepareStatement(sql);
+            statement.setString(1, username);
+            statement.setString(2, forename);
+            statement.setString(3, lastname);
+            statement.setString(4, residence);
+            statement.setString(5, mail);
+            ResultSet rs = statement.executeQuery();
+            rs.first();
+            ArrayList<User> foundUser = new ArrayList<User>();
+            
+            while (!rs.wasNull()) {
+                foundUser.add(new User(rs.getInt("id"), rs.getString("username")));
+                rs.next();
+            }
+            User[] user = new User[foundUser.size()];
+            return foundUser.toArray(user);
+    }   catch (SQLException ex) {
+            Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
             throw new InternalServerErrorException();
         }
-        return null;
     }
 
     @Override
