@@ -74,8 +74,8 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
         function = new CommonFunctions();
         SessionHandler = new SessionHandler();
     }
-
-    private MyUser getMyUser(String username, String mail) throws InternalServerErrorException {
+    
+    private MyUser getMyUser(String username, String mail) throws InternalServerErrorException{
         MyUser myUser = null;
         try {
             String sql = "SELECT * FROM chatter.user WHERE username = ? and mail = ?;";
@@ -84,24 +84,24 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             statement.setString(2, mail);
             ResultSet rs = statement.executeQuery();
             rs.first();
-
+            
             myUser = new MyUser(
                     rs.getBytes("privatekey"),
-                    rs.getString("forename"),
+                    rs.getString("forename"), 
                     rs.getString("lastname"),
                     rs.getString("residence"),
-                    rs.getString("mail"),
+                    rs.getString("mail"), 
                     null, //sessionKey
                     rs.getInt("id"),
                     rs.getString("username"));
-
+            
         } catch (SQLException ex) {
             Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
             throw new InternalServerErrorException();
         }
         return myUser;
     }
-
+    
     private PreparedStatement editUser(MyUser myUser) throws InternalServerErrorException, UserAlreadyExsistsException, MailAlreadyInUseException {
         if (function.checkUserDetails(myUser) == false) {
             throw new InternalServerErrorException();
@@ -141,70 +141,62 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             throw new InternalServerErrorException();
         }
     }
-
+    
     @Override
     public MyUser createUser(MyUser myUser, String password) throws UserAlreadyExsistsException, PasswordInvalidException, MailAlreadyInUseException, InternalServerErrorException {
         if (function.checkPassword(password) == false) {
-            throw new PasswordInvalidException();
+          throw new PasswordInvalidException();
         }
-//        if (function.checkUserDetails(myUser) == false) {
-//          throw new InternalServerErrorException();
-//        }
+        if (function.checkUserDetails(myUser) == false) {
+          throw new InternalServerErrorException();
+        }
         try {
-//            String sql = "SELECT COUNT(*) FROM chatter.user WHERE username = ?;";
-//            PreparedStatement statement = MySQLConnection.prepareStatement(sql);
-//            statement.setString(1, myUser.getUsername());
-//            ResultSet res = statement.executeQuery();
-//            res.first();
-//            int count = res.getInt(1);
-//            if (count > 0) {
-//                throw new UserAlreadyExsistsException();
-//            }
-//            sql = "SELECT COUNT(*) FROM chatter.user WHERE mail = ?;";
-//            statement = MySQLConnection.prepareStatement(sql);
-//            statement.setString(1, myUser.getMail());
-//            res = statement.executeQuery();
-//            res.first();
-//            count = res.getInt(1);
-//            if (count > 0) {
-//                throw new MailAlreadyInUseException();
-//            } 
-//            
-//            sql = "INSERT INTO chatter.user "
-//                    + "(username, forename, lastname, residence, mail, password, salt, publickey, privatekey) "
-//                    + "VALUES (?,?,?,?,?,?,?,?,?);";
-//            statement = MySQLConnection.prepareStatement(sql);
-//            statement.setString(1, myUser.getUsername());
-//            statement.setString(2, myUser.getForename());
-//            statement.setString(3, myUser.getLastname());
-//            statement.setString(4, myUser.getResidence());
-//            statement.setString(5, myUser.getMail());
+            String sql = "SELECT COUNT(*) FROM chatter.user WHERE username = ?;";
+            PreparedStatement statement = MySQLConnection.prepareStatement(sql);
+            statement.setString(1, myUser.getUsername());
+            ResultSet res = statement.executeQuery();
+            res.first();
+            int count = res.getInt(1);
+            if (count > 0) {
+                throw new UserAlreadyExsistsException();
+            }
+            sql = "SELECT COUNT(*) FROM chatter.user WHERE mail = ?;";
+            statement = MySQLConnection.prepareStatement(sql);
+            statement.setString(1, myUser.getMail());
+            res = statement.executeQuery();
+            res.first();
+            count = res.getInt(1);
+            if (count > 0) {
+                throw new MailAlreadyInUseException();
+            } 
             
-            PreparedStatement editUser = editUser(myUser);
-            String sql = "UPDATE chatter.user SET password = ?, salt = ?, publickey = ?, privatekey = ? WHERE id = ?;";
-            PreparedStatement statement = MySQLConnection.prepareCall(sql);
+            sql = "INSERT INTO chatter.user "
+                    + "(username, forename, lastname, residence, mail, password, salt, publickey, privatekey) "
+                    + "VALUES (?,?,?,?,?,?,?,?,?);";
+            statement = MySQLConnection.prepareStatement(sql);
+            statement.setString(1, myUser.getUsername());
+            statement.setString(2, myUser.getForename());
+            statement.setString(3, myUser.getLastname());
+            statement.setString(4, myUser.getResidence());
+            statement.setString(5, myUser.getMail());
+            
             SecureRandom random = new SecureRandom();
             byte seed[] = new byte[64];
             random.nextBytes(seed);
             
-            statement.setBytes(1, function.HashPassword(password, seed));
-            statement.setBytes(2, seed);
+            statement.setBytes(6, function.HashPassword(password, seed));
+            statement.setBytes(7, seed);
             
             KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
             keyGen.initialize(2048, random);
             KeyPair pair = keyGen.generateKeyPair();
-            statement.setBytes(3,pair.getPublic().getEncoded());
+            statement.setBytes(8,pair.getPublic().getEncoded());
             
             MessageDigest MD5 = MessageDigest.getInstance("MD5");
             SecretKey secKey = new SecretKeySpec(MD5.digest(function.StringToByte(password)),"AES");
-            statement.setBytes(4, function.AESEncrypt(pair.getPublic().getEncoded(), secKey));
-            MySQLConnection.setAutoCommit(false);
-            editUser.executeUpdate();
-            statement.setInt(5, getMyUser(myUser.getUsername(), myUser.getMail()).getId());
+            statement.setBytes(9, function.AESEncrypt(pair.getPublic().getEncoded(), secKey));
             statement.executeUpdate();
-            MySQLConnection.commit();
-            MySQLConnection.setAutoCommit(true);
-                        
+                    
         } catch (SQLException ex) {
             Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
             throw new InternalServerErrorException();
@@ -212,23 +204,66 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
             throw new InternalServerErrorException();
         }
-
+        
         MyUser newUser = getMyUser(password, myUser.getMail());
         if (!newUser.getUsername().equals("")) {
+            System.out.println("Benutzer nicht korrekt angelegt");
             throw new InternalServerErrorException();
         }
         return newUser;
     }
 
     @Override
-    public MyUser editUser(String sessionKey, MyUser myUser) throws SessionDeniedException, InternalServerErrorException {
+    public MyUser editUser(String sessionKey, MyUser editUser) throws SessionDeniedException, InternalServerErrorException, UserAlreadyExsistsException, MailAlreadyInUseException {
+        //TODO: Ändern wenn Sessionkey eine Funktion hat
+        int oldUserID = editUser.getId();
+        //int oldUserID = SessionHandler.getUserID(sessionKey);
         if (false) {
             throw new SessionDeniedException();
         }
-        if (false) {
+        if (function.checkUserDetails(editUser) == false) {
             throw new InternalServerErrorException();
         }
-        return null;
+        try {
+            String sql = "SELECT COUNT(*) FROM chatter.user WHERE username = ?;";
+            PreparedStatement statement = MySQLConnection.prepareStatement(sql);
+            statement.setString(1, editUser.getUsername());
+            ResultSet res = statement.executeQuery();
+            res.first();
+            int count = res.getInt(1);
+            if (count > 0) {
+                throw new UserAlreadyExsistsException();
+            }
+            sql = "SELECT COUNT(*) FROM chatter.user WHERE mail = ?;";
+            statement = MySQLConnection.prepareStatement(sql);
+            statement.setString(1, editUser.getMail());
+            res = statement.executeQuery();
+            res.first();
+            count = res.getInt(1);
+            if (count > 0) {
+                throw new MailAlreadyInUseException();
+            }
+
+            sql = "UPDATE chatter.user SET username = ?, forename = ?, lastname = ?, residence = ?, mail = ? WHERE id = ?;";
+            statement = MySQLConnection.prepareStatement(sql);
+            statement.setString(1, editUser.getUsername());
+            statement.setString(2, editUser.getForename());
+            statement.setString(3, editUser.getLastname());
+            statement.setString(4, editUser.getResidence());
+            statement.setString(5, editUser.getMail());
+            statement.setInt(6, oldUserID);
+            statement.executeUpdate();
+
+            MyUser newUser = getMyUser(editUser.getUsername(), editUser.getMail());
+            if (!newUser.getUsername().equals("")) {
+                System.out.println("Benutzer nicht korrekt geändert");
+                throw new InternalServerErrorException();
+            }
+            return newUser;
+        } catch (SQLException ex) {
+            Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
+            throw new InternalServerErrorException();
+        }
     }
 
     @Override
@@ -411,7 +446,13 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             ResultSet rs = statement.executeQuery();
 
             //Anzahl der Ergebnisse
-            int countResults = countOfResultSet(rs);
+            int countResults = 0;
+            if (rs.first()) {
+                countResults++;
+                while (rs.next()) {
+                    countResults++;
+                }
+            }
 
             //Lade das Ergebnis in ein Message Array
             messages = new Message[countResults];
@@ -437,72 +478,13 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
     @Override
     public Friend[] getFriendlist(String sessionKey) throws InternalServerErrorException {
         Friend[] friends = null;
-        //Checke Session auf Gültigkeit!
-        //SessionHandler.checkSession(sessionKey);
 
-        String sql;
-        PreparedStatement statement;
-        ResultSet rs;
-        //int user = SessionHandler.getUserID(sessionKey);
-        //Für Tests
-        int user = 2;
 
-        try {
-            //Hole Daten aus DB
-            sql = "SELECT user.id, user.username, max(message.seen) as seen "
-                    + "FROM chatter.friend friend, chatter.user user, chatter.message message "
-                    + "WHERE friend.user = ? "
-                    + "AND friend.friend = (SELECT friend.friend FROM chatter.friend friend WHERE friend.user = ?) "
-                    + "AND friend.friend = user.id "
-                    + "AND message.reciever = friend.user AND message.sender = friend.friend;";
-            statement = MySQLConnection.prepareStatement(sql);
-            statement.setInt(1, user);
-            statement.setInt(2, user);
-
-            rs = statement.executeQuery();
-
-            //Schreibe Ergebnis um
-            int count = countOfResultSet(rs);
-            friends = new Friend[count];
-            rs.first();
-            int friendID;
-            String username;
-            Boolean newMessage;
-            Boolean isOnline = null;
-            for (int i = 0; i < count; i++){
-                friendID = rs.getInt("id");
-                username = rs.getString("username");
-                if (rs.getInt("seen") == 0){
-                    newMessage = false;
-                } else {
-                    newMessage = true;
-                }
-                //isOnline = SessionHandler.hasSession(user);
-                friends[i] = new Friend(newMessage, isOnline, friendID, username);
-            }
-        } catch (SQLException ex) {
-            throw new InternalServerErrorException("SQLException: " + ex.getMessage());
-        }
 
         if (false) {
             throw new InternalServerErrorException();
         }
         return friends;
-    }
-
-    private int countOfResultSet(ResultSet rs) throws InternalServerErrorException {
-        int count = 0;
-        try {
-            if (rs.first()) {
-                count++;
-                while (rs.next()) {
-                    count++;
-                }
-            }
-        } catch (SQLException ex) {
-            throw new InternalServerErrorException("SQLException: " + ex.getMessage());
-        }
-        return count;
     }
 
     @Override
