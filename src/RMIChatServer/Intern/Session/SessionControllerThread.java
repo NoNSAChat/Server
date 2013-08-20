@@ -25,11 +25,11 @@ public class SessionControllerThread extends Thread {
         long now;
         while (!interrupted()) {
             try {
-                Thread.sleep(1000 * 60 * 5);
+                Thread.sleep(1000 * 60);
             } catch (InterruptedException ex) {
                 Logger.getLogger(SessionControllerThread.class.getName()).log(Level.SEVERE, null, ex);
             }
-            now = System.nanoTime();
+            now = System.nanoTime() / 1000000000;
             for (Session currentSession : session) {
                 if (currentSession.getEnd() > now) {
                     session.remove(currentSession);

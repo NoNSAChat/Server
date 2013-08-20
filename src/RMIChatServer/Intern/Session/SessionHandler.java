@@ -16,7 +16,7 @@ import java.util.logging.Logger;
  * @author Pascal
  */
 public class SessionHandler {
-
+    
     private ArrayList<Session> session;
 
     /**
@@ -25,10 +25,11 @@ public class SessionHandler {
      */
     public SessionHandler() {
         this.session = new ArrayList<Session>();
-//        new SessionControllerThread(session).run();
+        Thread sessionController = new SessionControllerThread(session);
+        sessionController.start();
         //Für Tests
-//        session.add(new Session(1, "user1"));
-//        session.add(new Session(1, "user2"));
+        session.add(new Session(1, "user1"));
+        session.add(new Session(1, "user2"));
     }
 
     /**
@@ -41,12 +42,8 @@ public class SessionHandler {
         if (containsSession(sessionKey)) {
         } else {
             Session currentSession = getSession(sessionKey);
-            long timeDiff = (System.nanoTime() / 1000000000) - currentSession.getEnd();
-            if (timeDiff < 0) {
-                destroySession(sessionKey);
-                throw new SessionDeniedException("Diese Session ist abgelaufen");
-            }
-            currentSession.setEnd((System.nanoTime() / 1000000000) + (60 * 5));
+            checkSessionTime(currentSession);
+            resetTime(currentSession);
         }
     }
 
@@ -103,7 +100,10 @@ public class SessionHandler {
      * @throws SessionDeniedException
      */
     public int getUserID(String sessionKey) throws SessionDeniedException {
-        return getSession(sessionKey).getUser();
+        Session currentSession = getSession(sessionKey);
+        checkSessionTime(currentSession);
+        resetTime(currentSession);
+        return currentSession.getUser();
     }
 
     /**
@@ -115,12 +115,18 @@ public class SessionHandler {
     public Boolean hasSession(int userID) {
         for (Session currentSession : session) {
             if (currentSession.getUser() == userID) {
+                try {
+                    checkSessionTime(currentSession);
+                } catch (SessionDeniedException ex) {
+                    Logger.getLogger(SessionHandler.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                resetTime(currentSession);
                 return true;
             }
         }
         return false;
     }
-
+    
     private Boolean containsSession(String sessionKey) {
         for (Session currentSession : session) {
             if (currentSession.getSessionKey().equals(sessionKey)) {
@@ -129,7 +135,7 @@ public class SessionHandler {
         }
         return false;
     }
-
+    
     private Session getSession(String sessionKey) throws SessionDeniedException {
         for (Session currentSession : session) {
             if (currentSession.getSessionKey().equals(sessionKey)) {
@@ -137,5 +143,24 @@ public class SessionHandler {
             }
         }
         throw new SessionDeniedException("Session konnte nicht gefunden werden!");
+    }
+    
+    private void resetTime(Session sessionToReset) {
+        sessionToReset.setEnd((System.nanoTime() / 1000000000) + (60 * 5));
+    }
+    
+    private void resetTime(String sessionKey) {
+        for (Session currentSession : session) {
+            if (currentSession.getSessionKey().equals(sessionKey)) {
+                currentSession.setEnd((System.nanoTime() / 1000000000) + (60 * 5));
+            }
+        }
+    }
+    
+    private void checkSessionTime(Session currentSession) throws SessionDeniedException {
+        if (currentSession.getEnd() > System.nanoTime() / 1000000000) {
+            session.remove(currentSession);
+            throw new SessionDeniedException("Die Session ist abgelaufen");
+        }
     }
 }
