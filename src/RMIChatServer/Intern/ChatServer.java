@@ -636,5 +636,30 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
     
     public void Test(){
         System.out.println(SessionHandler.hasSession(1));
+        String sess = SessionHandler.generateSession(1);
+        System.out.println(sess);
+        try {
+            System.out.println(SessionHandler.getUserID(sess));
+        } catch (SessionDeniedException ex) {
+            Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        try {
+            SessionHandler.checkSession(sess);
+        } catch (SessionDeniedException ex) {
+            Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        try {
+            SessionHandler.checkSession(sess + "123");
+        } catch (SessionDeniedException ex) {
+            Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        SessionHandler.destroySession(sess);
+        try {
+            SessionHandler.checkSession(sess);
+        } catch (SessionDeniedException ex) {
+            Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        SessionHandler.destroyAllSessions(1);
+        System.out.println(SessionHandler.hasSession(1));
     }
 }

@@ -25,10 +25,11 @@ public class SessionHandler {
      */
     public SessionHandler() {
         this.session = new ArrayList<Session>();
-//        new SessionControllerThread(session).run();
+        Thread sessionController = new SessionControllerThread(session);
+        sessionController.start();
         //Für Tests
-//        session.add(new Session(1, "user1"));
-//        session.add(new Session(1, "user2"));
+        session.add(new Session(1, "user1"));
+        session.add(new Session(1, "user2"));
     }
 
     /**
