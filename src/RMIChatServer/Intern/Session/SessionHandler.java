@@ -160,6 +160,7 @@ public class SessionHandler {
     private void checkSessionTime(Session currentSession) throws SessionDeniedException {
         if (currentSession.getEnd() < (System.nanoTime() / 1000000000)) {
             session.remove(currentSession);
+            System.out.println(currentSession.getEnd() + "," + (System.nanoTime() / 1000000000));
             throw new SessionDeniedException("Die Session ist abgelaufen");
         }
     }
