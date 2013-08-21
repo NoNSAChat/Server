@@ -152,8 +152,10 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             keyGen.initialize(2048, random);
             KeyPair pair = keyGen.generateKeyPair();
             statement.setBytes(8, pair.getPublic().getEncoded());
-
-            statement.setBytes(9, generatePrivateKey(password, pair));
+            
+            MessageDigest MD5 = MessageDigest.getInstance("MD5");
+            SecretKey secKey = new SecretKeySpec(MD5.digest(function.StringToByte(password)), "AES");
+            statement.setBytes(9, function.AESEncrypt(pair.getPrivate().getEncoded(), secKey));
             statement.executeUpdate();
 
         } catch (SQLException ex) {
@@ -170,12 +172,6 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             throw new InternalServerErrorException();
         }
         return newUser;
-    }
-    
-    private byte[] generatePrivateKey(String password, KeyPair pair) throws NoSuchAlgorithmException, InternalServerErrorException {
-        MessageDigest MD5 = MessageDigest.getInstance("MD5");
-        SecretKey secKey = new SecretKeySpec(MD5.digest(function.StringToByte(password)), "AES");
-        return function.AESEncrypt(pair.getPublic().getEncoded(), secKey);
     }
 
     @Override
@@ -248,25 +244,21 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
                 throw new WrongPasswordException();
             }
             
-            sql = "UPDATE chatter.user SET password = ?, salt = ?, publickey = ?, privatekey = ?;";
+            sql = "UPDATE chatter.user SET password = ?, privatekey = ?;";
             statement = MySQLConnection.prepareStatement(sql);
             statement.setInt(1, userID);
             
-            SecureRandom random = new SecureRandom();
-            byte seed[] = new byte[64];
-            random.nextBytes(seed);
-
-            statement.setBytes(1, function.HashPassword(newPassword, seed));
-            statement.setBytes(2, seed);
-
-            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-            keyGen.initialize(2048, random);
-            KeyPair pair = keyGen.generateKeyPair();
-            statement.setBytes(3, pair.getPublic().getEncoded());
-            statement.setBytes(4, generatePrivateKey(newPassword, pair));
+            
+            statement.setBytes(1, function.HashPassword(newPassword, res.getBytes("salt")));
+            
+            MessageDigest MD5 = MessageDigest.getInstance("MD5");
+            SecretKey oldSecKey = new SecretKeySpec(MD5.digest(function.StringToByte(oldPassword)), "AES");
+            SecretKey newSecKey = new SecretKeySpec(MD5.digest(function.StringToByte(newPassword)), "AES");
+            byte [] newEncryptedPrivateKey = function.AESEncrypt(function.AESDecrypt(res.getBytes("privatekey"), oldSecKey), newSecKey);
+            statement.setBytes(2, newEncryptedPrivateKey);
             statement.executeUpdate();
             
-            return generatePrivateKey(newPassword, pair);
+            return newEncryptedPrivateKey;
         
         } catch (SQLException ex) {
             Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
