@@ -105,7 +105,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
     
     @Override
     public MyUser createUser(MyUser myUser, String password) throws UserAlreadyExsistsException, PasswordInvalidException, MailAlreadyInUseException, InternalServerErrorException {
-        if (function.checkPassword(password) == false) {
+        if (password != null && function.checkPassword(password) == false) {
             throw new PasswordInvalidException();
         }
         if (function.checkUserDetails(myUser) == false) {
