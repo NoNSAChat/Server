@@ -353,7 +353,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
         try {
             //Überprüfe ob Benutzer existieren           
             checkUserExists(sender, reciever);
-            
+
             String sql;
             PreparedStatement statement;
             //Schreibe die Nachricht in die DB
@@ -435,6 +435,13 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
                 messages[i] = new Message(rs.getInt("id"), rs.getInt("reciever"), rs.getBytes("message"));
                 rs.next();
             }
+            //Setzte seen auf 0 (gelesen)
+            rs.first();
+            int high = rs.getInt("id");
+            rs.last();
+            int low = rs.getInt("id");
+            setMessageSeen(sender, reciever, low, high);
+            
             statement.close();
         } catch (SQLException ex) {
             throw new InternalServerErrorException(ex.getMessage());
@@ -489,6 +496,13 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
                 messages[i] = new Message(rs.getInt("id"), rs.getInt("reciever"), rs.getBytes("message"));
                 rs.next();
             }
+            //Setzte seen auf 0 (gelesen)
+            rs.first();
+            int high = rs.getInt("id");
+            rs.last();
+            int low = rs.getInt("id");
+            setMessageSeen(sender, reciever, low, high);
+            
             statement.close();
         } catch (SQLException ex) {
             throw new InternalServerErrorException(ex.getMessage());
@@ -765,5 +779,21 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
         }
         SessionHandler.destroyAllSessions(1);
         System.out.println(SessionHandler.hasSession(1));
+    }
+
+    private void setMessageSeen(int sender, int reciever, int low, int high) throws InternalServerErrorException {
+        try {
+            String sql = "UPDATE chatter.message SET seen = ? WHERE sender = ? AND reciever = ? AND id < ? AND id > ?;";           
+            PreparedStatement statement = MySQLConnection.prepareStatement(sql);
+            //0 = Nachricht gesehen
+            statement.setInt(1, 0);
+            statement.setInt(2, sender);
+            statement.setInt(3, reciever);
+            statement.setInt(4, (high + 1));
+            statement.setInt(5, (low - 1));
+            statement.executeUpdate();
+        } catch (SQLException ex) {
+            throw new InternalServerErrorException("SQLException: " + ex.getMessage());
+        }
     }
 }
