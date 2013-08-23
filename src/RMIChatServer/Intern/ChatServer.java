@@ -262,26 +262,34 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             throw new InternalServerErrorException();
         }
     }
+    
+    private String setWildcard(String s) {
+        if(s.equals("") || s == null) {
+            return "%";
+        }
+        else {
+            return "%"+s+"%";
+        }
+    }
 
     @Override
     public User[] searchFriend(String username, String forename, String lastname, String residence, String mail) throws InternalServerErrorException {
         try {
-            String sql = "SELECT id,username FROM chatter.user WHERE username LIKE '%?%' and forename LIKE '%?%' "
-                    + "and lastname LIKE '%?%' and residence LIKE '%?%' and mail LIKE '%?%';";
+            String sql = "SELECT id,username FROM chatter.user WHERE username LIKE ? and forename LIKE ? "
+                    + "and lastname LIKE ? and residence LIKE ? and mail LIKE ?;";
             PreparedStatement statement = MySQLConnection.prepareStatement(sql);
-            statement.setString(1, username);
-            statement.setString(2, forename);
-            statement.setString(3, lastname);
-            statement.setString(4, residence);
-            statement.setString(5, mail);
+            statement.setString(1, setWildcard(username));
+            statement.setString(2, setWildcard(forename));
+            statement.setString(3, setWildcard(lastname));
+            statement.setString(4, setWildcard(residence));
+            statement.setString(5, setWildcard(mail));
             ResultSet rs = statement.executeQuery();
-            rs.first();
             ArrayList<User> foundUser = new ArrayList<>();
 
-            while (!rs.wasNull()) {
-                foundUser.add(new User(rs.getInt("id"), rs.getString("username")));
-                rs.next();
+            while (rs.next()) {
+                foundUser.add(new User(rs.getInt("id"), rs.getString("username"))); 
             }
+            
             User[] user = new User[foundUser.size()];
             return foundUser.toArray(user);
         } catch (SQLException ex) {
