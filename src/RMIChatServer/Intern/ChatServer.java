@@ -171,12 +171,6 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
         return newUser;
     }
 
-    private byte[] generatePrivateKey(String password, KeyPair pair) throws NoSuchAlgorithmException, InternalServerErrorException {
-        MessageDigest MD5 = MessageDigest.getInstance("MD5");
-        SecretKey secKey = new SecretKeySpec(MD5.digest(function.StringToByte(password)), "AES");
-        return function.AESEncrypt(pair.getPublic().getEncoded(), secKey);
-    }
-
     @Override
     public MyUser editUser(String sessionKey, MyUser editUser) throws SessionDeniedException, InternalServerErrorException, UserAlreadyExsistsException, MailAlreadyInUseException {
 
