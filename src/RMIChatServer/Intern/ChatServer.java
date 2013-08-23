@@ -158,10 +158,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             statement.setBytes(9, function.AESEncrypt(pair.getPrivate().getEncoded(), secKey));
             statement.executeUpdate();
 
-        } catch (SQLException ex) {
-            Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
-            throw new InternalServerErrorException();
-        } catch (NoSuchAlgorithmException ex) {
+        } catch (SQLException | NoSuchAlgorithmException ex) {
             Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
             throw new InternalServerErrorException();
         }
@@ -266,10 +263,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             
             return newEncryptedPrivateKey;
         
-        } catch (SQLException ex) {
-            Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
-            throw new InternalServerErrorException();
-        } catch (NoSuchAlgorithmException ex) {
+        } catch (SQLException | NoSuchAlgorithmException ex) {
             Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
             throw new InternalServerErrorException();
         }
@@ -278,7 +272,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
     @Override
     public User[] searchFriend(String username, String forename, String lastname, String residence, String mail) throws InternalServerErrorException {
         try {
-            String sql = "SELECT id,username FROM chatter.user WHERE username LIKE '%?%' and fandename LIKE '%?%' "
+            String sql = "SELECT id,username FROM chatter.user WHERE username LIKE '%?%' and forename LIKE '%?%' "
                     + "and lastname LIKE '%?%' and residence LIKE '%?%' and mail LIKE '%?%';";
             PreparedStatement statement = MySQLConnection.prepareStatement(sql);
             statement.setString(1, username);
@@ -288,7 +282,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             statement.setString(5, mail);
             ResultSet rs = statement.executeQuery();
             rs.first();
-            ArrayList<User> foundUser = new ArrayList<User>();
+            ArrayList<User> foundUser = new ArrayList<>();
 
             while (!rs.wasNull()) {
                 foundUser.add(new User(rs.getInt("id"), rs.getString("username")));
