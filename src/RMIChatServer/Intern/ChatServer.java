@@ -241,11 +241,9 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
                 throw new WrongPasswordException();
             }
             
-            sql = "UPDATE chatter.user SET password = ?, privatekey = ?;";
+            sql = "UPDATE chatter.user SET password = ?, privatekey = ? WHERE id = ?;";
             statement = MySQLConnection.prepareStatement(sql);
-            statement.setInt(1, userID);
-            
-            
+                 
             statement.setBytes(1, function.HashPassword(newPassword, res.getBytes("salt")));
             
             MessageDigest MD5 = MessageDigest.getInstance("MD5");
@@ -253,6 +251,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             SecretKey newSecKey = new SecretKeySpec(MD5.digest(function.StringToByte(newPassword)), "AES");
             byte [] newEncryptedPrivateKey = function.AESEncrypt(function.AESDecrypt(res.getBytes("privatekey"), oldSecKey), newSecKey);
             statement.setBytes(2, newEncryptedPrivateKey);
+            statement.setInt(3, userID);
             statement.executeUpdate();
             
             return newEncryptedPrivateKey;
