@@ -152,7 +152,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             keyGen.initialize(2048, random);
             KeyPair pair = keyGen.generateKeyPair();
             statement.setBytes(8, pair.getPublic().getEncoded());
-            
+
             MessageDigest MD5 = MessageDigest.getInstance("MD5");
             //SecretKey secKey = new SecretKeySpec(MD5.digest(function.StringToByte(password)), "AES");
             //Anmerkung Pascal: CommonFunction.generateUserAESKey
@@ -241,35 +241,34 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             if (!Arrays.equals(res.getBytes("password"), function.HashPassword(oldPassword, res.getBytes("salt")))) {
                 throw new WrongPasswordException();
             }
-            
+
             sql = "UPDATE chatter.user SET password = ?, privatekey = ? WHERE id = ?;";
             statement = MySQLConnection.prepareStatement(sql);
-                 
+
             statement.setBytes(1, function.HashPassword(newPassword, res.getBytes("salt")));
-            
+
             //MessageDigest MD5 = MessageDigest.getInstance("MD5");
             //SecretKey oldSecKey = new SecretKeySpec(MD5.digest(function.StringToByte(oldPassword)), "AES");
             //SecretKey newSecKey = new SecretKeySpec(MD5.digest(function.StringToByte(newPassword)), "AES");
             //Anmerkung Pascal: CommonFunctions.generateUserAESKey
-            byte [] newEncryptedPrivateKey = function.AESEncrypt(function.AESDecrypt(res.getBytes("privatekey"), function.generateBenutzerAESKey(res.getString("username"), oldPassword)), function.generateBenutzerAESKey(res.getString("username"), newPassword));
+            byte[] newEncryptedPrivateKey = function.AESEncrypt(function.AESDecrypt(res.getBytes("privatekey"), function.generateBenutzerAESKey(res.getString("username"), oldPassword)), function.generateBenutzerAESKey(res.getString("username"), newPassword));
             statement.setBytes(2, newEncryptedPrivateKey);
             statement.setInt(3, userID);
             statement.executeUpdate();
-            
+
             return newEncryptedPrivateKey;
-        
+
         } catch (SQLException ex) {
             Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
             throw new InternalServerErrorException();
         }
     }
-    
+
     private String setWildcard(String s) {
-        if(s.equals("") || s == null) {
+        if (s.equals("") || s == null) {
             return "%";
-        }
-        else {
-            return "%"+s+"%";
+        } else {
+            return "%" + s + "%";
         }
     }
 
@@ -288,9 +287,9 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             ArrayList<User> foundUser = new ArrayList<>();
 
             while (rs.next()) {
-                foundUser.add(new User(rs.getInt("id"), rs.getString("username"))); 
+                foundUser.add(new User(rs.getInt("id"), rs.getString("username")));
             }
-            
+
             User[] user = new User[foundUser.size()];
             return foundUser.toArray(user);
         } catch (SQLException ex) {
@@ -436,7 +435,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             rs.last();
             int low = rs.getInt("id");
             setMessageSeen(sender, reciever, low, high);
-            
+
             statement.close();
         } catch (SQLException ex) {
             throw new InternalServerErrorException(ex.getMessage());
@@ -497,7 +496,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             rs.last();
             int low = rs.getInt("id");
             setMessageSeen(sender, reciever, low, high);
-            
+
             statement.close();
         } catch (SQLException ex) {
             throw new InternalServerErrorException(ex.getMessage());
@@ -778,7 +777,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
 
     private void setMessageSeen(int sender, int reciever, int low, int high) throws InternalServerErrorException {
         try {
-            String sql = "UPDATE chatter.message SET seen = ? WHERE sender = ? AND reciever = ? AND id < ? AND id > ?;";           
+            String sql = "UPDATE chatter.message SET seen = ? WHERE sender = ? AND reciever = ? AND id < ? AND id > ?;";
             PreparedStatement statement = MySQLConnection.prepareStatement(sql);
             //0 = Nachricht gesehen
             statement.setInt(1, 0);
@@ -787,6 +786,55 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             statement.setInt(4, (high + 1));
             statement.setInt(5, (low - 1));
             statement.executeUpdate();
+        } catch (SQLException ex) {
+            throw new InternalServerErrorException("SQLException: " + ex.getMessage());
+        }
+    }
+
+    @Override
+    public void deleteUser(String sessionKey, String password) throws UserNotFoundException, WrongPasswordException, InternalServerErrorException, SessionDeniedException, RemoteException {
+        try {
+            //Überprüfe Session
+            SessionHandler.checkSession(sessionKey);
+            
+            int userid = SessionHandler.getUserID(sessionKey);
+            
+            String sql = "SELECT * FROM chatter.user WHERE id = ?;";
+            PreparedStatement statement;
+            statement = MySQLConnection.prepareStatement(sql);
+            statement.setInt(1, userid);
+            ResultSet res = statement.executeQuery();
+            res.last();
+
+            if (res.getRow() == 0) {
+                throw new UserNotFoundException();
+            }
+            res.first();
+            if (!Arrays.equals(res.getBytes("password"), function.HashPassword(password, res.getBytes("salt")))) {
+                throw new WrongPasswordException();
+            }
+
+            //Lösche Nachrichten
+            sql = "DELETE FROM `chatter`.`message` WHERE sender = ? OR reciever = ?";
+            statement = MySQLConnection.prepareStatement(sql);
+            statement.setInt(1, userid);
+            statement.setInt(2, userid);
+            statement.executeUpdate();
+            
+            //Lösche Freunde
+            sql = "DELETE FROM `chatter`.`friend` WHERE user = ? OR friend = ?";
+            statement = MySQLConnection.prepareStatement(sql);
+            statement.setInt(1, userid);
+            statement.setInt(2, userid);
+            statement.executeUpdate();
+            
+            //Lösche User
+            sql = "DELETE FROM `chatter`.`user` WHERE id = ?";
+            statement = MySQLConnection.prepareStatement(sql);
+            statement.setInt(1, userid);
+            statement.executeUpdate();
+            
+            statement.close();
         } catch (SQLException ex) {
             throw new InternalServerErrorException("SQLException: " + ex.getMessage());
         }

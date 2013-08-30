@@ -162,4 +162,14 @@ public interface ChatServerInterface extends Remote {
      * @throws InternalServerErrorException Wird geworfen, wenn ein Fehler auftritt, der nicht auftreten dürfte. Keine Fehlerbehandlung clientseitig möglich.
      */
     public void logOff (String sessionKey) throws InternalServerErrorException, RemoteException;
+    
+    /**
+     * Löscht einen Benutzer, seine Freunde und Nachrichten.
+     * @param sessionKey Session KEy der Anmeldung
+     * @param password Passwort des Benutzers
+     * @throws WrongPasswordException Wird bei einem falschen Passwort geworfen
+     * @throws InternalServerErrorException Wird geworfen, wenn ein Fehler auftritt, der nicht auftreten dürfte. Keine Fehlerbehandlung clientseitig möglich.
+     * @throws SessionDeniedException Wird geworfen, wenn eine Session abgelehnt wird.
+     */
+    public void deleteUser (String sessionKey, String password) throws UserNotFoundException, WrongPasswordException, InternalServerErrorException, SessionDeniedException, RemoteException;
 }
