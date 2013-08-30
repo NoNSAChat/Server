@@ -39,6 +39,15 @@ public class MyUser extends User {
         this.residence = residence;
         this.mail = mail;
     }
+
+    public MyUser(String forename, String lastname, String residence, String mail, String username) {
+        super(username);
+        this.forename = forename;
+        this.lastname = lastname;
+        this.residence = residence;
+        this.mail = mail;
+    }
+    
     
 
     public byte[] getEncyptedPrivateKey() {
