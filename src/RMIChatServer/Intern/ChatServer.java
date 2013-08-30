@@ -154,8 +154,9 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             statement.setBytes(8, pair.getPublic().getEncoded());
             
             MessageDigest MD5 = MessageDigest.getInstance("MD5");
-            SecretKey secKey = new SecretKeySpec(MD5.digest(function.StringToByte(password)), "AES");
-            statement.setBytes(9, function.AESEncrypt(pair.getPrivate().getEncoded(), secKey));
+            //SecretKey secKey = new SecretKeySpec(MD5.digest(function.StringToByte(password)), "AES");
+            //Anmerkung Pascal: CommonFunction.generateUserAESKey
+            statement.setBytes(9, function.AESEncrypt(pair.getPrivate().getEncoded(), function.generateBenutzerAESKey(myUser.getUsername(), password)));
             statement.executeUpdate();
 
         } catch (SQLException | NoSuchAlgorithmException ex) {
@@ -246,17 +247,18 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
                  
             statement.setBytes(1, function.HashPassword(newPassword, res.getBytes("salt")));
             
-            MessageDigest MD5 = MessageDigest.getInstance("MD5");
-            SecretKey oldSecKey = new SecretKeySpec(MD5.digest(function.StringToByte(oldPassword)), "AES");
-            SecretKey newSecKey = new SecretKeySpec(MD5.digest(function.StringToByte(newPassword)), "AES");
-            byte [] newEncryptedPrivateKey = function.AESEncrypt(function.AESDecrypt(res.getBytes("privatekey"), oldSecKey), newSecKey);
+            //MessageDigest MD5 = MessageDigest.getInstance("MD5");
+            //SecretKey oldSecKey = new SecretKeySpec(MD5.digest(function.StringToByte(oldPassword)), "AES");
+            //SecretKey newSecKey = new SecretKeySpec(MD5.digest(function.StringToByte(newPassword)), "AES");
+            //Anmerkung Pascal: CommonFunctions.generateUserAESKey
+            byte [] newEncryptedPrivateKey = function.AESEncrypt(function.AESDecrypt(res.getBytes("privatekey"), function.generateBenutzerAESKey(res.getString("username"), oldPassword)), function.generateBenutzerAESKey(res.getString("username"), newPassword));
             statement.setBytes(2, newEncryptedPrivateKey);
             statement.setInt(3, userID);
             statement.executeUpdate();
             
             return newEncryptedPrivateKey;
         
-        } catch (SQLException | NoSuchAlgorithmException ex) {
+        } catch (SQLException ex) {
             Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
             throw new InternalServerErrorException();
         }
