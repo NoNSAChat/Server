@@ -380,10 +380,10 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
         SessionHandler.checkSession(sessionKey);
 
         Message[] messages = null;
-        int sender = SessionHandler.getUserID(sessionKey);
+        int reciever = SessionHandler.getUserID(sessionKey);
         //Für Tests
         //int sender = 1;
-        int reciever = user;
+        int sender = user;
         String sql = "";
         PreparedStatement statement = null;
         ResultSet rs = null;
@@ -459,8 +459,8 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
         try {
             //Für Tests
             //int sender = 1;
-            int sender = SessionHandler.getUserID(sessionKey);
-            int reciever = user;
+            int reciever = SessionHandler.getUserID(sessionKey);
+            int sender = user;
 
             //Lade Nachrichten aus DB
             String sql = "SELECT * FROM chatter.message WHERE ((sender = ? AND reciever = ?) OR (sender = ? AND reciever = ?)) AND id < ? ORDER BY id DESC LIMIT ?;";
