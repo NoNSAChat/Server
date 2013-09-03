@@ -37,6 +37,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.logging.Level;
@@ -351,13 +352,14 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             String sql;
             PreparedStatement statement;
             //Schreibe die Nachricht in die DB
-            sql = "INSERT INTO `chatter`.`message` (`sender`, `reciever`, `message`, `seen`) VALUES (?, ?, ?, ?);";
+            sql = "INSERT INTO `chatter`.`message` (`sender`, `reciever`, `message`, `seen`, 'time') VALUES (?, ?, ?, ?, ?);";
             statement = MySQLConnection.prepareStatement(sql);
             statement.setInt(1, sender);
             statement.setInt(2, reciever);
             statement.setBytes(3, message.getMessage());
             //1 = Nachricht nicht gesehen
             statement.setInt(4, 1);
+            statement.setLong(5, System.currentTimeMillis());
             statement.executeUpdate();
             statement.close();
         } catch (SQLException ex) {
@@ -426,7 +428,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             messages = new Message[countResults];
             rs.first();
             for (int i = 0; i < messages.length; i++) {
-                messages[i] = new Message(rs.getInt("id"), rs.getInt("reciever"), rs.getBytes("message"));
+                messages[i] = new Message(rs.getInt("id"), rs.getInt("reciever"), rs.getBytes("message"), new Time(rs.getInt("time")));
                 rs.next();
             }
             //Setzte seen auf 0 (gelesen)
@@ -487,7 +489,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             messages = new Message[countResults];
             rs.first();
             for (int i = 0; i < messages.length; i++) {
-                messages[i] = new Message(rs.getInt("id"), rs.getInt("reciever"), rs.getBytes("message"));
+                messages[i] = new Message(rs.getInt("id"), rs.getInt("reciever"), rs.getBytes("message"), new Time(rs.getInt("time")));
                 rs.next();
             }
             //Setzte seen auf 0 (gelesen)

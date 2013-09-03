@@ -5,6 +5,7 @@
 package RMIChatServer.Message;
 
 import java.io.Serializable;
+import java.sql.Time;
 
 /**
  *
@@ -15,17 +16,21 @@ public class Message implements Serializable {
     private int id;
     private int user;
     private byte[] message;
+    private Time time;
 
     public Message(int reciever, byte[] message) {
         this.user = reciever;
         this.message = message;
     }
 
-    public Message(int id, int user, byte[] message) {
+    public Message(int id, int user, byte[] message, Time time) {
         this.id = id;
         this.user = user;
         this.message = message;
+        this.time = time;
     }
+
+    
 
     public int getUser() {
         return user;
@@ -50,4 +55,13 @@ public class Message implements Serializable {
     public void setId(int id) {
         this.id = id;
     }
+
+    public Time getTime() {
+        return time;
+    }
+
+    public void setTime(Time time) {
+        this.time = time;
+    }
+    
 }
