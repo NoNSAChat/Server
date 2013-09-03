@@ -352,7 +352,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             String sql;
             PreparedStatement statement;
             //Schreibe die Nachricht in die DB
-            sql = "INSERT INTO `chatter`.`message` (`sender`, `reciever`, `message`, `seen`, 'time') VALUES (?, ?, ?, ?, ?);";
+            sql = "INSERT INTO `chatter`.`message` (`sender`, `reciever`, `message`, `seen`, `time`) VALUES (?, ?, ?, ?, ?);";
             statement = MySQLConnection.prepareStatement(sql);
             statement.setInt(1, sender);
             statement.setInt(2, reciever);
@@ -363,7 +363,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             statement.executeUpdate();
             statement.close();
         } catch (SQLException ex) {
-            throw new InternalServerErrorException("SQLException");
+            throw new InternalServerErrorException("SQLException: " + ex.getMessage());
         }
 
         if (false) {
