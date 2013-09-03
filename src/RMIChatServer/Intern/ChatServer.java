@@ -416,19 +416,14 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             }
 
             //Anzahl der Ergebnisse
-            int countResults = 0;
-            if (rs.first()) {
-                countResults++;
-                while (rs.next()) {
-                    countResults++;
-                }
-            }
+            rs.last();
+            int countResults = rs.getRow();
 
             //Lade das Ergebnis in ein Message Array
             messages = new Message[countResults];
             rs.first();
             for (int i = 0; i < messages.length; i++) {
-                messages[i] = new Message(rs.getInt("id"), rs.getInt("reciever"), rs.getBytes("message"), new Time(rs.getInt("time")));
+                messages[i] = new Message(rs.getInt("id"), rs.getInt("reciever"), rs.getBytes("message"), new Time(rs.getLong("time")));
                 rs.next();
             }
             //Setzte seen auf 0 (gelesen)
@@ -489,7 +484,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             messages = new Message[countResults];
             rs.first();
             for (int i = 0; i < messages.length; i++) {
-                messages[i] = new Message(rs.getInt("id"), rs.getInt("reciever"), rs.getBytes("message"), new Time(rs.getInt("time")));
+                messages[i] = new Message(rs.getInt("id"), rs.getInt("reciever"), rs.getBytes("message"), new Time(rs.getLong("time")));
                 rs.next();
             }
             //Setzte seen auf 0 (gelesen)
