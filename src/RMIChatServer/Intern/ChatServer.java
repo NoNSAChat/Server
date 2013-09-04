@@ -839,6 +839,35 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
 
     @Override
     public void deleteFriendship(String sessionKey, int user) throws SessionDeniedException, InternalServerErrorException, RemoteException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        try {
+            String sql;
+            PreparedStatement statement;
+            //Überprüfe Session
+            SessionHandler.checkSession(sessionKey);
+            
+            int userid = SessionHandler.getUserID(sessionKey);
+
+            //Lösche Nachrichten
+            sql = "DELETE FROM `chatter`.`message` WHERE (sender = ? AND reciever = ?) OR (sender = ? AND reciever = ?)";
+            statement = MySQLConnection.prepareStatement(sql);
+            statement.setInt(1, userid);
+            statement.setInt(2, user);
+            statement.setInt(3, user);
+            statement.setInt(4, userid);
+            statement.executeUpdate();
+            
+            //Lösche Freundschaft
+            sql = "DELETE FROM `chatter`.`friend` WHERE (user = ? AND friend = ?) OR (user = ? AND friend = ?)";
+            statement = MySQLConnection.prepareStatement(sql);
+            statement.setInt(1, userid);
+            statement.setInt(2, user);
+            statement.setInt(3, user);
+            statement.setInt(4, userid);
+            statement.executeUpdate();
+            
+            statement.close();
+        } catch (SQLException ex) {
+            throw new InternalServerErrorException("SQLException: " + ex.getMessage());
+        }
     }
 }
