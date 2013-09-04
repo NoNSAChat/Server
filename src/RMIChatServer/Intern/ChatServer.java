@@ -836,4 +836,9 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             throw new InternalServerErrorException("SQLException: " + ex.getMessage());
         }
     }
+
+    @Override
+    public void deleteFriendship(String sessionKey, int user) throws SessionDeniedException, InternalServerErrorException, RemoteException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 }

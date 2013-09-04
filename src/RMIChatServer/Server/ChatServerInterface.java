@@ -172,4 +172,14 @@ public interface ChatServerInterface extends Remote {
      * @throws SessionDeniedException Wird geworfen, wenn eine Session abgelehnt wird.
      */
     public void deleteUser (String sessionKey, String password) throws UserNotFoundException, WrongPasswordException, InternalServerErrorException, SessionDeniedException, RemoteException;
+    
+    /**
+     * Löscht eine Freundschaft und deren Nachrichten.
+     * @param sessionKey Session Key des Benutzers.
+     * @param user User ID des Freundes
+     * @throws SessionDeniedException
+     * @throws InternalServerErrorException
+     * @throws RemoteException
+     */
+    public void deleteFriendship(String sessionKey, int user) throws SessionDeniedException, InternalServerErrorException, RemoteException;
 }
