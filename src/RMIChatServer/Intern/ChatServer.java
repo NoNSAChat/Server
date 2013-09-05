@@ -154,7 +154,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             KeyPair pair = keyGen.generateKeyPair();
             statement.setBytes(8, pair.getPublic().getEncoded());
 
-            MessageDigest MD5 = MessageDigest.getInstance("MD5");
+//            MessageDigest MD5 = MessageDigest.getInstance("MD5");
             //SecretKey secKey = new SecretKeySpec(MD5.digest(function.StringToByte(password)), "AES");
             //Anmerkung Pascal: CommonFunction.generateUserAESKey
             statement.setBytes(9, function.AESEncrypt(pair.getPrivate().getEncoded(), function.generateBenutzerAESKey(myUser.getUsername(), password)));
@@ -183,9 +183,10 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             throw new InternalServerErrorException();
         }
         try {
-            String sql = "SELECT COUNT(*) FROM chatter.user WHERE username = ?;";
+            String sql = "SELECT COUNT(*) FROM chatter.user WHERE username = ? and id != ?;";
             PreparedStatement statement = MySQLConnection.prepareStatement(sql);
             statement.setString(1, editUser.getUsername());
+            statement.setInt(2, oldUserID);
             ResultSet res = statement.executeQuery();
             res.first();
             int count = res.getInt(1);
