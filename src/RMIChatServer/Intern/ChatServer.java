@@ -188,18 +188,17 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             statement.setString(1, editUser.getUsername());
             statement.setInt(2, oldUserID);
             ResultSet res = statement.executeQuery();
-            res.first();
-            int count = res.getInt(1);
-            if (count > 0) {
+            res.last();
+            if (res.getRow() > 0) {
                 throw new UserAlreadyExsistsException();
             }
-            sql = "SELECT COUNT(*) FROM chatter.user WHERE mail = ?;";
+            sql = "SELECT COUNT(*) FROM chatter.user WHERE mail = ? and id != ?;";
             statement = MySQLConnection.prepareStatement(sql);
             statement.setString(1, editUser.getMail());
+            statement.setInt(2, oldUserID);
             res = statement.executeQuery();
-            res.first();
-            count = res.getInt(1);
-            if (count > 0) {
+            res.last();
+            if (res.getRow() > 0) {
                 throw new MailAlreadyInUseException();
             }
 
