@@ -183,7 +183,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             throw new InternalServerErrorException();
         }
         try {
-            String sql = "SELECT COUNT(*) FROM chatter.user WHERE username = ? and id != ?;";
+            String sql = "SELECT * FROM chatter.user WHERE username = ? and id != ?;";
             PreparedStatement statement = MySQLConnection.prepareStatement(sql);
             statement.setString(1, editUser.getUsername());
             statement.setInt(2, oldUserID);
@@ -192,7 +192,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             if (res.getRow() > 0) {
                 throw new UserAlreadyExsistsException();
             }
-            sql = "SELECT COUNT(*) FROM chatter.user WHERE mail = ? and id != ?;";
+            sql = "SELECT * FROM chatter.user WHERE mail = ? and id != ?;";
             statement = MySQLConnection.prepareStatement(sql);
             statement.setString(1, editUser.getMail());
             statement.setInt(2, oldUserID);
