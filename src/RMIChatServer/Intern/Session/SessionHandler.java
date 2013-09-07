@@ -36,7 +36,7 @@ public class SessionHandler {
      * Die Funktion überprüft einen Session Key auf Gültigkeit.
      *
      * @param sessionKey String, der die Session identifiziert
-     * @return true, falls die Session gültig ist, ansonsten false
+     * @throws SessionDeniedException Wird geworfen, wenn die Session ungültig ist.
      */
     public void checkSession(String sessionKey) throws SessionDeniedException {
         if (containsSession(sessionKey)) {
