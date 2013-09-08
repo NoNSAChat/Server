@@ -7,6 +7,7 @@ package RMIChatServer.Server;
 import RMIChatServer.Benutzer.Friend;
 import RMIChatServer.Benutzer.MyUser;
 import RMIChatServer.Benutzer.User;
+import RMIChatServer.Exception.ActivationKeyNotFoundException;
 import RMIChatServer.Exception.InternalServerErrorException;
 import RMIChatServer.Exception.MailAlreadyInUseException;
 import RMIChatServer.Exception.NoConversationFoundException;
@@ -14,6 +15,7 @@ import RMIChatServer.Exception.PasswordInvalidException;
 import RMIChatServer.Exception.SessionDeniedException;
 import RMIChatServer.Exception.UserAlreadyExsistsException;
 import RMIChatServer.Exception.UserAreAlreadyFriendsException;
+import RMIChatServer.Exception.UserNotActivatedException;
 import RMIChatServer.Exception.UserNotFoundException;
 import RMIChatServer.Exception.WrongPasswordException;
 import RMIChatServer.Message.Message;
@@ -96,7 +98,7 @@ public interface ChatServerInterface extends Remote {
      * @throws UserNotFoundException Wird geworfen, falls ein Benutzer nicht gefunden wurde.
      * @throws InternalServerErrorException Wird geworfen, wenn ein Fehler auftritt, der nicht auftreten dürfte. Keine Fehlerbehandlung clientseitig möglich.
      */
-    public MyUser login(String username, String password) throws WrongPasswordException, UserNotFoundException, InternalServerErrorException, RemoteException;
+    public MyUser login(String username, String password) throws UserNotActivatedException, WrongPasswordException, UserNotFoundException, InternalServerErrorException, RemoteException;
     
     /**
      * Sendet eine Nachricht an einen Benutzer.
@@ -182,4 +184,13 @@ public interface ChatServerInterface extends Remote {
      * @throws RemoteException
      */
     public void deleteFriendship(String sessionKey, int user) throws SessionDeniedException, InternalServerErrorException, RemoteException;
+    
+    /**
+     * Aktiviert einen bestehenden Benutzer.
+     * @param key Key, der mit der E-Mail versandt wurde.
+     * @throws ActivationKeyNotFoundException Wird geworfen, wenn der angegebene Key nicht gefunden werden kann.
+     * @throws InternalServerErrorException
+     * @throws RemoteException
+     */
+    public void activateUser(String key) throws ActivationKeyNotFoundException, InternalServerErrorException, RemoteException;
 }

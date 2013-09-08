@@ -70,7 +70,6 @@ public class SessionHandler {
         try {
             session.remove(getSession(sessionKey));
         } catch (SessionDeniedException ex) {
-            Logger.getLogger(SessionHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -86,7 +85,6 @@ public class SessionHandler {
                 try {
                     session.remove(getSession(currentSession.getSessionKey()));
                 } catch (SessionDeniedException ex) {
-                    Logger.getLogger(SessionHandler.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         }
@@ -118,7 +116,6 @@ public class SessionHandler {
                 try {
                     checkSessionTime(currentSession);
                 } catch (SessionDeniedException ex) {
-                    Logger.getLogger(SessionHandler.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 resetTime(currentSession);
                 return true;
@@ -160,7 +157,6 @@ public class SessionHandler {
     private void checkSessionTime(Session currentSession) throws SessionDeniedException {
         if (currentSession.getEnd() < (System.nanoTime() / 1000000000)) {
             session.remove(currentSession);
-            System.out.println(currentSession.getEnd() + "," + (System.nanoTime() / 1000000000));
             throw new SessionDeniedException("Die Session ist abgelaufen");
         }
     }
