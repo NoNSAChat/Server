@@ -138,8 +138,8 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             }
 
             sql = "INSERT INTO chatter.user "
-                    + "(username, forename, lastname, residence, mail, password, salt, publickey, privatekey) "
-                    + "VALUES (?,?,?,?,?,?,?,?,?);";
+                    + "(username, forename, lastname, residence, mail, password, salt, publickey, privatekey, activated) "
+                    + "VALUES (?,?,?,?,?,?,?,?,?,?);";
             statement = MySQLConnection.prepareStatement(sql);
             statement.setString(1, myUser.getUsername());
             statement.setString(2, myUser.getForename());
@@ -160,10 +160,11 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             statement.setBytes(8, pair.getPublic().getEncoded());
 
             statement.setBytes(9, function.AESEncrypt(pair.getPrivate().getEncoded(), function.generateBenutzerAESKey(myUser.getUsername(), password)));
+            statement.setInt(10, 0);
             statement.executeUpdate();
         } catch (SQLException | NoSuchAlgorithmException ex) {
             Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
-            throw new InternalServerErrorException();
+            throw new InternalServerErrorException("Exception: " + ex.getMessage());
         }
 
         MyUser newUser = getMyUser(myUser.getUsername());
@@ -175,14 +176,14 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
         try {
             //Lege Aktivierungs-Key an
             SecureRandom random = new SecureRandom();
-            String key = new BigInteger(130, random).toString(5);
-            String sql = "INSERT INTO `chatter`.`activation` VALUES (?, ?);";
+            String key = new BigInteger(130, random).toString(32);
+            String sql = "INSERT INTO `chatter`.`activation` VALUES (?,?);";
             PreparedStatement statement = MySQLConnection.prepareStatement(sql);
-            statement.setString(1, key);
+            statement.setString(1, key.substring(0, 5));
             statement.setInt(2, newUser.getId());
-            statement.executeQuery();
+            statement.executeUpdate();
             //Versende Mail
-            mail.senKey(newUser.getMail(), key);
+            mail.sendKey(newUser.getMail(), key.substring(0, 5));
         } catch (SQLException ex) {
             Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
             throw new InternalServerErrorException();
@@ -359,7 +360,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             PreparedStatement statement;
             ResultSet rs;
             
-            sql = "SELECT * FROM activation WHERE key = ?;";
+            sql = "SELECT * FROM chatter.activation WHERE regkey = ?;";
             statement = MySQLConnection.prepareStatement(sql);
             statement.setString(1, key);
             rs = statement.executeQuery();
@@ -371,11 +372,12 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             
             rs.first();
 
-            sql = "UPDATE user SET activated = 1 WHERE id = ?;";
+            sql = "UPDATE `chatter`.`user` SET `activated` = 1 WHERE `id` = ?;";
             statement = MySQLConnection.prepareStatement(sql);
             statement.setInt(1, rs.getInt("userid"));
             statement.executeUpdate();
         } catch (SQLException ex) {
+            Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
             throw new InternalServerErrorException("SQLException: " + ex.getMessage());
         }
         

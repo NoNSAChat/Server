@@ -6,6 +6,8 @@ package RMIChatServer.Intern.Mail;
 
 import RMIChatServer.Exception.InternalServerErrorException;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
@@ -26,25 +28,25 @@ public class Mailer {
 
     public Mailer() {
         props = new Properties();
-        props.put("mail.smtp.auth", "false");
-        props.put("mail.smtp.host", "mail.java-tutor.com");
+        props.put("mail.smtp.host", host);
     }
 
-    public void senKey(String reciever, String key) throws InternalServerErrorException {
+    public void sendKey(String reciever, String key) throws InternalServerErrorException {
         try {
             Session session = Session.getDefaultInstance(props);
             Message msg = new MimeMessage(session);
-            InternetAddress addressFrom = new InternetAddress("NoNSAChat");
+            InternetAddress addressFrom = new InternetAddress("NoNSAChat@spr19.dhbw-heidenheim.de");
             msg.setFrom(addressFrom);
             InternetAddress addressTo = new InternetAddress(reciever);
             msg.setRecipient(Message.RecipientType.TO, addressTo);
             msg.setSubject("Ihre Registrierung für NoNSAChat");
-            String message = "Hallo,\n\ndein Aktivierungscode lautet:\n" + key + "\nDanke für deine Registrierung!\n\nMit freundlichen Grüßen\nDein NoNSAChat-Team";
-            msg.setContent(message, "text/plain");
+            String message = "Hallo,<br />dein Aktivierungscode lautet:<br />" + key + "<br />Danke f&uuml;r deine Registrierung!<br /><br />Mit freundlichen Gr&uuml;&szlig;en<br />Dein NoNSAChat-Team";
+            msg.setContent(message, "text/html");
             Transport.send(msg);
         } catch (AddressException ex) {
             throw new InternalServerErrorException("Mail konnte nicht gesendet werden!");
         } catch (MessagingException ex) {
+            Logger.getLogger(Mailer.class.getName()).log(Level.SEVERE, null, ex);
             throw new InternalServerErrorException("MessagingException: " + ex.getMessage());
         }
     }
