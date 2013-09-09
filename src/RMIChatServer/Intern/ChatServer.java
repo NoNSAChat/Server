@@ -416,7 +416,6 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             statement.setInt(4, 1);
             statement.setLong(5, System.currentTimeMillis());
             statement.executeUpdate();
-            statement.close();
         } catch (SQLException ex) {
             throw new InternalServerErrorException("SQLException: " + ex.getMessage());
         }
@@ -487,8 +486,6 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             rs.last();
             int low = rs.getInt("id");
             setMessageSeen(sender, reciever, low, high);
-
-            statement.close();
         } catch (SQLException ex) {
             throw new InternalServerErrorException(ex.getMessage());
         }
@@ -548,8 +545,6 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             rs.last();
             int low = rs.getInt("id");
             setMessageSeen(sender, reciever, low, high);
-
-            statement.close();
         } catch (SQLException ex) {
             throw new InternalServerErrorException(ex.getMessage());
         }
@@ -885,8 +880,6 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             statement = MySQLConnection.prepareStatement(sql);
             statement.setInt(1, userid);
             statement.executeUpdate();
-
-            statement.close();
         } catch (SQLException ex) {
             throw new InternalServerErrorException("SQLException: " + ex.getMessage());
         }
@@ -919,8 +912,6 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             statement.setInt(3, user);
             statement.setInt(4, userid);
             statement.executeUpdate();
-
-            statement.close();
         } catch (SQLException ex) {
             throw new InternalServerErrorException("SQLException: " + ex.getMessage());
         }
