@@ -154,7 +154,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             statement.setBytes(6, function.HashPassword(password, seed));
             statement.setBytes(7, seed);
 
-            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding");
             keyGen.initialize(2048, random);
             KeyPair pair = keyGen.generateKeyPair();
             statement.setBytes(8, pair.getPublic().getEncoded());
