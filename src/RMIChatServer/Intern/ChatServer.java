@@ -377,7 +377,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             statement.setInt(1, rs.getInt("userid"));
             statement.executeUpdate();
             
-            sql = "DELETE FROM `chatter`.`activation` WHERE key = ?;";
+            sql = "DELETE FROM `chatter`.`activation` WHERE regkey = ?;";
             statement = MySQLConnection.prepareStatement(sql);
             statement.setString(1, key);
             statement.executeUpdate();
