@@ -66,7 +66,7 @@ public class CommonFunctions {
      */
     public PublicKey byteToPublicKey(byte[] key) throws InternalServerErrorException {
         try {
-            PublicKey publicKey = KeyFactory.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding").generatePublic(new X509EncodedKeySpec(key));
+            PublicKey publicKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(key));
             return publicKey;
         } catch (NoSuchAlgorithmException ex) {
             throw new InternalServerErrorException("NoSuchAlgorithmException: " + ex.getMessage());
