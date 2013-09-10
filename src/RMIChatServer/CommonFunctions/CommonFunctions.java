@@ -12,8 +12,10 @@ import java.security.Key;
 import java.security.KeyFactory;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.Security;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
@@ -41,8 +43,8 @@ public class CommonFunctions {
     public CommonFunctions() {
         try {
             //Verschlüsslungs-Objekte anlegen
-            AESCipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-            RSACipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding");
+            AESCipher = Cipher.getInstance("AES");
+            RSACipher = Cipher.getInstance("RSA");
             //Hash-Objekt anlegen
             MD5 = MessageDigest.getInstance("SHA-256");
         } catch (NoSuchAlgorithmException ex) {

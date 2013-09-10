@@ -35,6 +35,7 @@ import java.security.Key;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -67,8 +68,8 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
 
     public ChatServer() throws RemoteException, Exception {
         super(Registry.REGISTRY_PORT,
-	      new RMISSLClientSocketFactory(),
-	      new RMISSLServerSocketFactory());
+                new RMISSLClientSocketFactory(),
+                new RMISSLServerSocketFactory());
         //User und Passwort einlesen
         FileReader fr = new FileReader(new File("src/RMIChatServer/Password/Password.pwd"));
         BufferedReader br = new BufferedReader(fr);
@@ -159,7 +160,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             statement.setBytes(6, function.HashPassword(password, seed));
             statement.setBytes(7, seed);
 
-            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding");
+            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
             keyGen.initialize(2048, random);
             KeyPair pair = keyGen.generateKeyPair();
             statement.setBytes(8, pair.getPublic().getEncoded());
@@ -167,8 +168,10 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             statement.setBytes(9, function.AESEncrypt(pair.getPrivate().getEncoded(), function.generateBenutzerAESKey(myUser.getUsername(), password)));
             statement.setInt(10, 0);
             statement.executeUpdate();
-        } catch (SQLException | NoSuchAlgorithmException ex) {
+        } catch (SQLException ex) {
             Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
+            throw new InternalServerErrorException("Exception: " + ex.getMessage());
+        } catch (NoSuchAlgorithmException ex) {
             throw new InternalServerErrorException("Exception: " + ex.getMessage());
         }
 
@@ -364,24 +367,24 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             String sql;
             PreparedStatement statement;
             ResultSet rs;
-            
+
             sql = "SELECT * FROM chatter.activation WHERE regkey = ?;";
             statement = MySQLConnection.prepareStatement(sql);
             statement.setString(1, key);
             rs = statement.executeQuery();
-            
+
             rs.last();
-            if (rs.getRow() == 0){
+            if (rs.getRow() == 0) {
                 throw new ActivationKeyNotFoundException("Ihr Aktivierungskey konnte nicht gefunden werden!");
             }
-            
+
             rs.first();
 
             sql = "UPDATE `chatter`.`user` SET `activated` = 1 WHERE `id` = ?;";
             statement = MySQLConnection.prepareStatement(sql);
             statement.setInt(1, rs.getInt("userid"));
             statement.executeUpdate();
-            
+
             sql = "DELETE FROM `chatter`.`activation` WHERE regkey = ?;";
             statement = MySQLConnection.prepareStatement(sql);
             statement.setString(1, key);
@@ -390,7 +393,7 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
             Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
             throw new InternalServerErrorException("SQLException: " + ex.getMessage());
         }
-        
+
     }
 
     @Override
