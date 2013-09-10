@@ -87,7 +87,7 @@ public class CommonFunctions {
      */
     public PrivateKey byteToPrivateKey(byte[] key) throws InternalServerErrorException {
         try {
-            PrivateKey PrivateKey = KeyFactory.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding").generatePrivate(new PKCS8EncodedKeySpec(key));
+            PrivateKey PrivateKey = KeyFactory.getInstance("RSA").generatePrivate(new PKCS8EncodedKeySpec(key));
             return PrivateKey;
         } catch (NoSuchAlgorithmException ex) {
             throw new InternalServerErrorException("NoSuchAlgorithmException: " + ex.getMessage());
