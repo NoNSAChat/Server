@@ -253,7 +253,7 @@ public class CommonFunctions {
             }
 
             //Erzeuge Key
-            Key key = new SecretKeySpec(stringForKey.getBytes("UTF-8"), "AES/ECB/PKCS5Padding");
+            Key key = new SecretKeySpec(stringForKey.getBytes("UTF-8"), "AES");
             return key;
         } catch (UnsupportedEncodingException ex) {
             throw new InternalServerErrorException("UnsupportedEncodingException: " + ex.getMessage());
