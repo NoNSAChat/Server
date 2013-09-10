@@ -1,0 +1,10 @@
+grant { 
+   permission java.io.FilePermission "<<ALL FILES>>",  "read";
+   permission java.util.PropertyPermission "file.encoding", "read";
+   permission java.net.SocketPermission "*", "connect,resolve";
+   permission java.net.SocketPermission "*", "accept,resolve";
+   permission java.util.PropertyPermission "javax.net.ssl.keyStorePassword", "write";
+   permission java.util.PropertyPermission "javax.net.ssl.keyStore", "write";
+   permission java.util.PropertyPermission "javax.net.ssl.trustStorePassword", "write";
+   permission java.util.PropertyPermission "javax.net.ssl.trustStore", "write";
+};

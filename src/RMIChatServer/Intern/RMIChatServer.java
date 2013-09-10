@@ -4,7 +4,12 @@
  */
 package RMIChatServer.Intern;
 
+import RMIChatServer.CommonFunctions.RMISSLClientSocketFactory;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.rmi.AlreadyBoundException;
+import java.rmi.RMISecurityManager;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -18,9 +23,24 @@ import java.util.logging.Logger;
 public class RMIChatServer {
 
     public static void main(String[] args) {
+        // Create and install a security manager
+	if (System.getSecurityManager() == null) {
+	    System.setSecurityManager(new RMISecurityManager());
+	}      
+        
         try {
-            //Registry starten
-            Registry reg = LocateRegistry.createRegistry(Registry.REGISTRY_PORT);
+                
+            BufferedReader br = new BufferedReader(new FileReader(new File("src/RMIChatServer/Password/ssl.pwd")));
+            System.setProperty("javax.net.ssl.keyStore", "keystore"); 
+            System.setProperty("javax.net.ssl.keyStorePassword",br.readLine());
+            System.setProperty("javax.net.ssl.trustStore", "trustsore");
+            System.setProperty("javax.net.ssl.trustStorePassword",br.readLine()); 
+            
+            br.close();
+            // Create SSL-based registry
+	    Registry reg = LocateRegistry.createRegistry(Registry.REGISTRY_PORT,
+		new RMISSLClientSocketFactory(),
+		new RMISSLServerSocketFactory());
             System.out.println("Registry gestartet");
             
             //RMIServer starten

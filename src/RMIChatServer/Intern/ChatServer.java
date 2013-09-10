@@ -8,6 +8,7 @@ import RMIChatServer.Benutzer.Friend;
 import RMIChatServer.Benutzer.MyUser;
 import RMIChatServer.Benutzer.User;
 import RMIChatServer.CommonFunctions.CommonFunctions;
+import RMIChatServer.CommonFunctions.RMISSLClientSocketFactory;
 import RMIChatServer.Exception.ActivationKeyNotFoundException;
 import RMIChatServer.Exception.InternalServerErrorException;
 import RMIChatServer.Exception.MailAlreadyInUseException;
@@ -28,6 +29,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.math.BigInteger;
 import java.rmi.RemoteException;
+import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.Key;
 import java.security.KeyPair;
@@ -64,6 +66,9 @@ public class ChatServer extends UnicastRemoteObject implements ChatServerInterfa
     private Mailer mail;
 
     public ChatServer() throws RemoteException, Exception {
+        super(Registry.REGISTRY_PORT,
+	      new RMISSLClientSocketFactory(),
+	      new RMISSLServerSocketFactory());
         //User und Passwort einlesen
         FileReader fr = new FileReader(new File("src/RMIChatServer/Password/Password.pwd"));
         BufferedReader br = new BufferedReader(fr);

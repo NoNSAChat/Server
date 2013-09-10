@@ -282,6 +282,7 @@ public class CommonFunctions {
      * @return True, wenn die Richtlinien eingehalten wurden, sonst false.
      */
     public Boolean checkUserDetails(MyUser myUser) {
+//        TODO: Mail auf gültigkeit überprüfen
         if (myUser.getUsername().length() > 0 && myUser.getUsername().length() <= 15
             && myUser.getMail().length() > 0 && myUser.getMail().length() <= 30
             && myUser.getForename().length() <= 15 && myUser.getLastname().length() <= 15
