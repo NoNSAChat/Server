@@ -116,7 +116,7 @@ public interface ChatServerInterface extends Remote {
      * @param sessionKey SessionKey um sich zu authentifizieren.
      * @param user Benutzer ID, dessen Konversation geladen werden soll.
      * @param count Anzahl der Nachrichten
-     * @param id Nachrichten dürfen keine HÖHERE ID besitzen, Wert "0" wenn die letzten Nachrichten geladen werden sollen.
+     * @param id Nachrichten dürfen keine KLEINERE ID besitzen, Wert "0" wenn die letzten Nachrichten geladen werden sollen.
      * @return Gibt ein Array an Messages zurück. Hierbei ist bei der Message das Attribut "user" entweder die eigene ID oder die ID des Konversationspartners.
      * @throws SessionDeniedException Wird geworfen, wenn die genannte Session nicht gültig ist.
      * @throws NoConversationFoundException Wird geworfen, wenn keine Konversation mit einem Benutzer gefunden wurde (dürfte eigentlich nicht auftreten).
@@ -129,7 +129,7 @@ public interface ChatServerInterface extends Remote {
      * Die erste Nachricht in dem Array hat die höchste id.
      * @param sessionKey SessionKey um sich zu authentifizieren.
      * @param user Benutzer ID, dessen Konversation geladen werden soll.
-     * @param lastID Nachrichten dürfen keine KLEINERE ID besitzen
+     * @param lastID Nachrichten dürfen keine HÖHERE ID besitzen
      * @param count Anzahl der Nachrichten
      * @return Gibt ein Array an Messages zurück. Hierbei ist bei der Message das Attribut "user" entweder die eigene ID oder die ID des Konversationspartners.
      * @throws SessionDeniedException Wird geworfen, wenn die genannte Session nicht gültig ist.
