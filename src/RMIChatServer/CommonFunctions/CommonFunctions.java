@@ -6,7 +6,6 @@ package RMIChatServer.CommonFunctions;
 
 import RMIChatServer.Benutzer.MyUser;
 import RMIChatServer.Exception.InternalServerErrorException;
-import RMIChatServer.Exception.PasswordInvalidException;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.Key;
@@ -42,10 +41,10 @@ public class CommonFunctions {
     public CommonFunctions() {
         try {
             //Verschlüsslungs-Objekte anlegen
-            AESCipher = Cipher.getInstance("AES");
-            RSACipher = Cipher.getInstance("RSA");
+            AESCipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+            RSACipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding");
             //Hash-Objekt anlegen
-            MD5 = MessageDigest.getInstance("MD5");
+            MD5 = MessageDigest.getInstance("SHA-256");
         } catch (NoSuchAlgorithmException ex) {
             Logger.getLogger(CommonFunctions.class.getName()).log(Level.SEVERE, null, ex);
         } catch (NoSuchPaddingException ex) {
@@ -65,7 +64,7 @@ public class CommonFunctions {
      */
     public PublicKey byteToPublicKey(byte[] key) throws InternalServerErrorException {
         try {
-            PublicKey publicKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(key));
+            PublicKey publicKey = KeyFactory.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding").generatePublic(new X509EncodedKeySpec(key));
             return publicKey;
         } catch (NoSuchAlgorithmException ex) {
             throw new InternalServerErrorException("NoSuchAlgorithmException: " + ex.getMessage());
@@ -86,7 +85,7 @@ public class CommonFunctions {
      */
     public PrivateKey byteToPrivateKey(byte[] key) throws InternalServerErrorException {
         try {
-            PrivateKey PrivateKey = KeyFactory.getInstance("RSA").generatePrivate(new PKCS8EncodedKeySpec(key));
+            PrivateKey PrivateKey = KeyFactory.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding").generatePrivate(new PKCS8EncodedKeySpec(key));
             return PrivateKey;
         } catch (NoSuchAlgorithmException ex) {
             throw new InternalServerErrorException("NoSuchAlgorithmException: " + ex.getMessage());
@@ -252,7 +251,7 @@ public class CommonFunctions {
             }
 
             //Erzeuge Key
-            Key key = new SecretKeySpec(stringForKey.getBytes("UTF-8"), "AES");
+            Key key = new SecretKeySpec(stringForKey.getBytes("UTF-8"), "AES/ECB/PKCS5Padding");
             return key;
         } catch (UnsupportedEncodingException ex) {
             throw new InternalServerErrorException("UnsupportedEncodingException: " + ex.getMessage());
@@ -266,7 +265,7 @@ public class CommonFunctions {
      * @return True, wenn die Richtlinien eingehalten wurden, sonst false.
      */
     public Boolean checkPassword(String password) {
-        if ((password.length() > 8) 
+        if ((password.length() > 8)
                 && (password.matches(".*[a-zA-Z]+.*"))
                 && (password.matches(".*[0-9]+.*"))
                 && (password.matches(".*\\p{Punct}+.*"))) {
@@ -274,7 +273,7 @@ public class CommonFunctions {
         }
         return false;
     }
-    
+
     /**
      * Überprüft ob der übergebene myUser den Userrichtlinien entspricht.
      *
@@ -284,9 +283,9 @@ public class CommonFunctions {
     public Boolean checkUserDetails(MyUser myUser) {
 //        TODO: Mail auf gültigkeit überprüfen
         if (myUser.getUsername().length() > 0 && myUser.getUsername().length() <= 15
-            && myUser.getMail().length() > 0 && myUser.getMail().length() <= 30
-            && myUser.getForename().length() <= 15 && myUser.getLastname().length() <= 15
-            && myUser.getResidence().length() <= 15) {
+                && myUser.getMail().length() > 0 && myUser.getMail().length() <= 30
+                && myUser.getForename().length() <= 15 && myUser.getLastname().length() <= 15
+                && myUser.getResidence().length() <= 15) {
             return true;
         }
         return false;
