@@ -24,25 +24,25 @@ public class RMIChatServer {
 
     public static void main(String[] args) {
         // Create and install a security manager
-	if (System.getSecurityManager() == null) {
-	    System.setSecurityManager(new RMISecurityManager());
-	}      
-        
         try {
-                
+
             BufferedReader br = new BufferedReader(new FileReader(new File("src/RMIChatServer/Password/ssl.pwd")));
-            System.setProperty("javax.net.ssl.keyStore", "keystore"); 
-            System.setProperty("javax.net.ssl.keyStorePassword",br.readLine());
+            System.setProperty("java.security.policy", "policy");
+            System.setProperty("javax.net.ssl.keyStore", "keystore");
+            System.setProperty("javax.net.ssl.keyStorePassword", br.readLine());
             System.setProperty("javax.net.ssl.trustStore", "trustsore");
-            System.setProperty("javax.net.ssl.trustStorePassword",br.readLine()); 
-            
+            System.setProperty("javax.net.ssl.trustStorePassword", br.readLine());
+            if (System.getSecurityManager() == null) {
+                System.setSecurityManager(new RMISecurityManager());
+            }
+
             br.close();
             // Create SSL-based registry
-	    Registry reg = LocateRegistry.createRegistry(Registry.REGISTRY_PORT,
-		new RMISSLClientSocketFactory(),
-		new RMISSLServerSocketFactory());
+            Registry reg = LocateRegistry.createRegistry(Registry.REGISTRY_PORT,
+                    new RMISSLClientSocketFactory(),
+                    new RMISSLServerSocketFactory());
             System.out.println("Registry gestartet");
-            
+
             //RMIServer starten
             ChatServer cs = new ChatServer();
             reg.bind("rmichatserver", cs);
